@@ -16,6 +16,7 @@ import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -74,6 +75,7 @@ app.get('/', (req, res) => {
             products: '/api/products',
             orders: '/api/orders',
             customers: '/api/customers',
+            invoices: '/api/invoices',
         },
     });
 });
@@ -83,6 +85,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // ============= ERROR HANDLING =============
 
