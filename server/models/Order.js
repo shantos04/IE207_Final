@@ -23,7 +23,12 @@ const orderSchema = new mongoose.Schema(
                 required: [true, 'Số điện thoại là bắt buộc'],
             },
         },
-        items: [
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: [true, 'User là bắt buộc'],
+        },
+        orderItems: [
             {
                 product: {
                     type: mongoose.Schema.Types.ObjectId,
@@ -61,8 +66,8 @@ const orderSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-            default: 'pending',
+            enum: ['Draft', 'Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'],
+            default: 'Draft',
         },
         paymentStatus: {
             type: String,
@@ -71,12 +76,26 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ['cash', 'bank-transfer', 'credit-card', 'e-wallet'],
-            default: 'cash',
+            default: 'COD',
         },
         shippingAddress: {
-            type: String,
-            required: [true, 'Địa chỉ giao hàng là bắt buộc'],
+            address: {
+                type: String,
+                required: [true, 'Địa chỉ là bắt buộc'],
+            },
+            city: {
+                type: String,
+                required: [true, 'Thành phố là bắt buộc'],
+            },
+            phone: {
+                type: String,
+                required: [true, 'Số điện thoại là bắt buộc'],
+            },
+        },
+        totalPrice: {
+            type: Number,
+            required: true,
+            default: 0,
         },
         notes: {
             type: String,
@@ -119,12 +138,13 @@ orderSchema.pre('save', async function (next) {
 
 // Tính subtotal cho từng item trước khi lưu
 orderSchema.pre('save', function (next) {
-    this.items.forEach((item) => {
+    this.orderItems.forEach((item) => {
         item.subtotal = item.price * item.quantity;
     });
 
     // Tính tổng tiền
-    this.totalAmount = this.items.reduce((sum, item) => sum + item.subtotal, 0);
+    this.totalAmount = this.orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+    this.totalPrice = this.totalAmount; // Đồng bộ totalPrice với totalAmount
 
     next();
 });

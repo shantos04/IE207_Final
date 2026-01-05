@@ -10,18 +10,13 @@ import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require authentication
-router.use(protect);
+// GET routes - public access
+router.get('/', getProducts);
+router.get('/:id', getProduct);
 
-router
-    .route('/')
-    .get(getProducts)
-    .post(authorize('admin', 'manager'), createProduct);
-
-router
-    .route('/:id')
-    .get(getProduct)
-    .put(authorize('admin', 'manager'), updateProduct)
-    .delete(authorize('admin'), deleteProduct);
+// POST/PUT/DELETE routes - require authentication
+router.post('/', protect, authorize('admin', 'manager'), createProduct);
+router.put('/:id', protect, authorize('admin', 'manager'), updateProduct);
+router.delete('/:id', protect, authorize('admin'), deleteProduct);
 
 export default router;

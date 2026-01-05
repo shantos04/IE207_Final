@@ -5,6 +5,8 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import DashboardLayout from './components/layout/DashboardLayout'
 import DashboardHome from './pages/DashboardHome'
 import ProductsPage from './pages/ProductsPage'
+import OrdersPage from './pages/OrdersPage'
+import CustomersPage from './pages/CustomersPage'
 import AuthPage from './pages/AuthPage'
 
 function App() {
@@ -50,7 +52,9 @@ function App() {
                     >
                         <Route index element={<Navigate to="/dashboard" replace />} />
                         <Route path="dashboard" element={<DashboardHome />} />
+                        <Route path="orders" element={<OrdersPage />} />
                         <Route path="products" element={<ProductsPage />} />
+                        <Route path="customers" element={<CustomersPage />} />
                     </Route>
 
                     {/* Catch all - redirect to dashboard */}

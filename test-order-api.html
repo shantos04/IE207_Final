@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .section h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .success {
+            border-left: 4px solid #27ae60;
+            background: #d5f4e6;
+        }
+
+        .error {
+            border-left: 4px solid #e74c3c;
+            background: #fadbd8;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-top: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .inline-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🛒 Test Order API</h1>
+
+        <!-- GET ALL ORDERS -->
+        <div class="section">
+            <h2>1. GET All Orders</h2>
+            <div class="inline-group">
+                <div>
+                    <label>Status Filter:</label>
+                    <select id="statusFilter">
+                        <option value="">Tất cả</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Limit:</label>
+                    <input type="number" id="limitInput" value="10" min="1" max="100">
+                </div>
+            </div>
+            <button onclick="getAllOrders()">Lấy danh sách đơn hàng</button>
+            <div id="getAllResult" class="result"></div>
+        </div>
+
+        <!-- CREATE ORDER -->
+        <div class="section">
+            <h2>2. POST Create Order</h2>
+            <div class="input-group">
+                <label>User ID:</label>
+                <input type="text" id="userId" placeholder="673c3e1234567890abcdef12">
+
+                <label>Customer Name:</label>
+                <input type="text" id="customerName" value="Nguyễn Văn A">
+
+                <div class="inline-group">
+                    <div>
+                        <label>Customer Email:</label>
+                        <input type="email" id="customerEmail" value="customer@example.com">
+                    </div>
+                    <div>
+                        <label>Customer Phone:</label>
+                        <input type="text" id="customerPhone" value="0901234567">
+                    </div>
+                </div>
+
+                <label>Product ID (từ danh sách sản phẩm):</label>
+                <input type="text" id="productId" placeholder="673c3e1234567890abcdef12">
+
+                <label>Quantity:</label>
+                <input type="number" id="quantity" value="2" min="1">
+
+                <label>Shipping Address:</label>
+                <input type="text" id="shippingAddress" value="123 Đường ABC, Quận 1">
+
+                <div class="inline-group">
+                    <div>
+                        <label>City:</label>
+                        <input type="text" id="shippingCity" value="TP. Hồ Chí Minh">
+                    </div>
+                    <div>
+                        <label>Shipping Phone:</label>
+                        <input type="text" id="shippingPhone" value="0901234567">
+                    </div>
+                </div>
+
+                <label>Payment Method:</label>
+                <select id="paymentMethod">
+                    <option value="COD">COD (Cash on Delivery)</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Credit Card">Credit Card</option>
+                </select>
+
+                <label>Notes (Optional):</label>
+                <textarea id="notes" rows="3" placeholder="Ghi chú đơn hàng..."></textarea>
+            </div>
+            <button onclick="createOrder()">Tạo đơn hàng</button>
+            <div id="createResult" class="result"></div>
+        </div>
+
+        <!-- GET SINGLE ORDER -->
+        <div class="section">
+            <h2>3. GET Single Order</h2>
+            <label>Order ID:</label>
+            <input type="text" id="getOrderId" placeholder="673c3e1234567890abcdef12">
+            <button onclick="getOrder()">Lấy chi tiết đơn hàng</button>
+            <div id="getOrderResult" class="result"></div>
+        </div>
+
+        <!-- UPDATE ORDER STATUS -->
+        <div class="section">
+            <h2>4. PUT Update Order Status</h2>
+            <label>Order ID:</label>
+            <input type="text" id="updateStatusOrderId" placeholder="673c3e1234567890abcdef12">
+            <label>New Status:</label>
+            <select id="newStatus">
+                <option value="Draft">Draft</option>
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+            <button onclick="updateOrderStatus()">Cập nhật trạng thái</button>
+            <div id="updateStatusResult" class="result"></div>
+        </div>
+
+        <!-- UPDATE PAYMENT STATUS -->
+        <div class="section">
+            <h2>5. PUT Update Payment Status</h2>
+            <label>Order ID:</label>
+            <input type="text" id="updatePaymentOrderId" placeholder="673c3e1234567890abcdef12">
+            <label>Payment Status:</label>
+            <select id="newPaymentStatus">
+                <option value="unpaid">Unpaid</option>
+                <option value="paid">Paid</option>
+                <option value="refunded">Refunded</option>
+            </select>
+            <button onclick="updatePaymentStatus()">Cập nhật thanh toán</button>
+            <div id="updatePaymentResult" class="result"></div>
+        </div>
+
+        <!-- CANCEL ORDER -->
+        <div class="section">
+            <h2>6. PUT Cancel Order</h2>
+            <label>Order ID:</label>
+            <input type="text" id="cancelOrderId" placeholder="673c3e1234567890abcdef12">
+            <button onclick="cancelOrder()">Hủy đơn hàng</button>
+            <div id="cancelResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        function displayResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.className = isSuccess ? 'result success' : 'result error';
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function getAllOrders() {
+            try {
+                const status = document.getElementById('statusFilter').value;
+                const limit = document.getElementById('limitInput').value;
+
+                let url = `${API_BASE_URL}/orders?limit=${limit}`;
+                if (status) url += `&status=${status}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                displayResult('getAllResult', data, response.ok);
+            } catch (error) {
+                displayResult('getAllResult', { error: error.message }, false);
+            }
+        }
+
+        async function createOrder() {
+            try {
+                const orderData = {
+                    user: document.getElementById('userId').value,
+                    customer: {
+                        name: document.getElementById('customerName').value,
+                        email: document.getElementById('customerEmail').value,
+                        phone: document.getElementById('customerPhone').value
+                    },
+                    orderItems: [{
+                        product: document.getElementById('productId').value,
+                        quantity: parseInt(document.getElementById('quantity').value)
+                    }],
+                    shippingAddress: {
+                        address: document.getElementById('shippingAddress').value,
+                        city: document.getElementById('shippingCity').value,
+                        phone: document.getElementById('shippingPhone').value
+                    },
+                    paymentMethod: document.getElementById('paymentMethod').value,
+                    notes: document.getElementById('notes').value
+                };
+
+                const response = await fetch(`${API_BASE_URL}/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                const data = await response.json();
+                displayResult('createResult', data, response.ok);
+            } catch (error) {
+                displayResult('createResult', { error: error.message }, false);
+            }
+        }
+
+        async function getOrder() {
+            try {
+                const orderId = document.getElementById('getOrderId').value;
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+                const data = await response.json();
+                displayResult('getOrderResult', data, response.ok);
+            } catch (error) {
+                displayResult('getOrderResult', { error: error.message }, false);
+            }
+        }
+
+        async function updateOrderStatus() {
+            try {
+                const orderId = document.getElementById('updateStatusOrderId').value;
+                const status = document.getElementById('newStatus').value;
+
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+                displayResult('updateStatusResult', data, response.ok);
+            } catch (error) {
+                displayResult('updateStatusResult', { error: error.message }, false);
+            }
+        }
+
+        async function updatePaymentStatus() {
+            try {
+                const orderId = document.getElementById('updatePaymentOrderId').value;
+                const paymentStatus = document.getElementById('newPaymentStatus').value;
+
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ paymentStatus })
+                });
+
+                const data = await response.json();
+                displayResult('updatePaymentResult', data, response.ok);
+            } catch (error) {
+                displayResult('updatePaymentResult', { error: error.message }, false);
+            }
+        }
+
+        async function cancelOrder() {
+            try {
+                const orderId = document.getElementById('cancelOrderId').value;
+
+                const response = await fetch(`${API_BASE_URL}/orders/${orderId}/cancel`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                displayResult('cancelResult', data, response.ok);
+            } catch (error) {
+                displayResult('cancelResult', { error: error.message }, false);
+            }
+        }
+
+        // Auto-fill with example data on page load
+        window.addEventListener('load', () => {
+            console.log('Test page loaded. Ready to test Order API.');
+        });
+    </script>
+</body>
+
+</html>

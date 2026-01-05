@@ -15,6 +15,7 @@ import connectDB from './config/database.js';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import customerRoutes from './routes/customerRoutes.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -33,7 +34,12 @@ app.use(helmet());
 // CORS
 app.use(
     cors({
-        origin: process.env.CLIENT_URL || 'http://localhost:3000',
+        origin: [
+            process.env.CLIENT_URL || 'http://localhost:3000',
+            'http://localhost:5173', // Vite default port
+            'http://localhost:3000', // React default port
+            'http://localhost:3001'  // Alternative React port
+        ],
         credentials: true,
     })
 );
@@ -67,6 +73,7 @@ app.get('/', (req, res) => {
             auth: '/api/auth',
             products: '/api/products',
             orders: '/api/orders',
+            customers: '/api/customers',
         },
     });
 });
@@ -75,6 +82,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/customers', customerRoutes);
 
 // ============= ERROR HANDLING =============
 

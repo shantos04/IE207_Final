@@ -15,7 +15,8 @@ export const getOrders = async (req, res) => {
 
         // Execute query with pagination
         const orders = await Order.find(query)
-            .populate('items.product', 'name productCode imageUrl')
+            .populate('orderItems.product', 'name productCode imageUrl')
+            .populate('user', 'fullName email')
             .populate('createdBy', 'fullName email')
             .limit(limit * 1)
             .skip((page - 1) * limit)
@@ -46,7 +47,8 @@ export const getOrders = async (req, res) => {
 export const getOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
-            .populate('items.product', 'name productCode imageUrl')
+            .populate('orderItems.product', 'name productCode imageUrl')
+            .populate('user', 'fullName email')
             .populate('createdBy', 'fullName email');
 
         if (!order) {
@@ -73,11 +75,11 @@ export const getOrder = async (req, res) => {
 // @access  Private
 export const createOrder = async (req, res) => {
     try {
-        const { customer, items, shippingAddress, paymentMethod, notes } = req.body;
+        const { customer, orderItems, shippingAddress, paymentMethod, notes, user } = req.body;
 
         // Validate and populate product details
-        const orderItems = [];
-        for (const item of items) {
+        const processedOrderItems = [];
+        for (const item of orderItems) {
             const product = await Product.findById(item.product);
 
             if (!product) {
@@ -94,7 +96,7 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            orderItems.push({
+            processedOrderItems.push({
                 product: product._id,
                 productName: product.name,
                 productCode: product.productCode,
@@ -110,11 +112,12 @@ export const createOrder = async (req, res) => {
         // Create order
         const order = await Order.create({
             customer,
-            items: orderItems,
+            user: user || req.user?.id, // Support both authenticated and unauthenticated requests
+            orderItems: processedOrderItems,
             shippingAddress,
             paymentMethod,
             notes,
-            createdBy: req.user.id,
+            createdBy: req.user?.id,
         });
 
         res.status(201).json({
@@ -210,7 +213,7 @@ export const cancelOrder = async (req, res) => {
             });
         }
 
-        if (order.status === 'delivered') {
+        if (order.status === 'Delivered') {
             return res.status(400).json({
                 success: false,
                 message: 'Không thể hủy đơn hàng đã giao',
@@ -218,7 +221,7 @@ export const cancelOrder = async (req, res) => {
         }
 
         // Restore product stock
-        for (const item of order.items) {
+        for (const item of order.orderItems) {
             const product = await Product.findById(item.product);
             if (product) {
                 product.stock += item.quantity;
@@ -226,7 +229,7 @@ export const cancelOrder = async (req, res) => {
             }
         }
 
-        order.status = 'cancelled';
+        order.status = 'Cancelled';
         await order.save();
 
         res.status(200).json({

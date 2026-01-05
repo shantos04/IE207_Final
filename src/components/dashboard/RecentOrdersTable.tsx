@@ -6,11 +6,12 @@ interface RecentOrdersTableProps {
 }
 
 const statusConfig = {
-    pending: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-700' },
-    processing: { label: 'Đang xử lý', color: 'bg-blue-100 text-blue-700' },
-    shipped: { label: 'Đã gửi', color: 'bg-purple-100 text-purple-700' },
-    delivered: { label: 'Đã giao', color: 'bg-green-100 text-green-700' },
-    cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-700' },
+    Draft: { label: 'Nháp', color: 'bg-gray-100 text-gray-800' },
+    Pending: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-800' },
+    Confirmed: { label: 'Đã xác nhận', color: 'bg-blue-100 text-blue-800' },
+    Shipped: { label: 'Đang giao', color: 'bg-green-100 text-green-800' },
+    Delivered: { label: 'Đã giao', color: 'bg-indigo-100 text-indigo-800' },
+    Cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-800' },
 };
 
 export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
