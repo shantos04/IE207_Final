@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import DashboardLayout from './components/layout/DashboardLayout'
 import DashboardHome from './pages/DashboardHome'
+import ProductsPage from './pages/ProductsPage'
 import AuthPage from './pages/AuthPage'
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
                     >
                         <Route index element={<Navigate to="/dashboard" replace />} />
                         <Route path="dashboard" element={<DashboardHome />} />
+                        <Route path="products" element={<ProductsPage />} />
                     </Route>
 
                     {/* Catch all - redirect to dashboard */}

@@ -12,12 +12,17 @@ export interface Product {
     _id: string;
     productCode: string;
     name: string;
+    description?: string;
     category: string;
     price: number;
     stock: number;
     status: 'in-stock' | 'low-stock' | 'out-of-stock';
     supplier?: string;
+    specifications?: Record<string, string>;
     imageUrl?: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface Order {
