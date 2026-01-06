@@ -15,17 +15,28 @@ interface RevenueChartProps {
 
 export default function RevenueChart({ data }: RevenueChartProps) {
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-            notation: 'compact',
-            maximumFractionDigits: 1,
-        }).format(value);
+        if (value >= 1_000_000_000) {
+            return `${(value / 1_000_000_000).toFixed(1)}B`;
+        } else if (value >= 1_000_000) {
+            return `${(value / 1_000_000).toFixed(0)}M`;
+        } else if (value >= 1_000) {
+            return `${(value / 1_000).toFixed(0)}K`;
+        } else {
+            return value.toString();
+        }
     };
 
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return `${date.getDate()}/${date.getMonth() + 1}`;
+        // Safely parse date to avoid NaN/NaN
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return '';
+            }
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        } catch {
+            return '';
+        }
     };
 
     return (
@@ -74,6 +85,7 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                             strokeWidth={2}
                             fillOpacity={1}
                             fill="url(#colorRevenue)"
+                            connectNulls={true}
                         />
                     </AreaChart>
                 </ResponsiveContainer>

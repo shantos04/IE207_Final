@@ -22,6 +22,12 @@ export default function StatCard({
     chartData,
 }: StatCardProps) {
     const isPositive = change > 0;
+    const isNegative = change < 0;
+    const isNeutral = change === 0;
+
+    // Determine if the negative change is due to incomplete month data
+    const isSignificantDrop = change < -50;
+    const showWarning = isSignificantDrop && title === 'Doanh thu';
 
     return (
         <div className="bg-white rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-shadow">
@@ -36,16 +42,24 @@ export default function StatCard({
             </div>
 
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                     {isPositive ? (
                         <TrendingUp className="w-4 h-4 text-green-500" />
-                    ) : (
-                        <TrendingDown className="w-4 h-4 text-red-500" />
-                    )}
-                    <span className={clsx('text-sm font-medium', isPositive ? 'text-green-500' : 'text-red-500')}>
+                    ) : isNegative ? (
+                        <TrendingDown className={clsx('w-4 h-4', showWarning ? 'text-gray-400' : 'text-red-500')} />
+                    ) : null}
+                    <span className={clsx(
+                        'text-sm font-medium',
+                        isPositive ? 'text-green-500' : showWarning ? 'text-gray-500' : isNegative ? 'text-red-500' : 'text-gray-500'
+                    )}>
                         {isPositive ? '+' : ''}{change}%
                     </span>
-                    <span className="text-sm text-gray-500 ml-1">so với tháng trước</span>
+                    <span className="text-sm text-gray-500 ml-1">
+                        {showWarning ? 'so với tháng trước' : 'so với tháng trước'}
+                    </span>
+                    {showWarning && (
+                        <span className="text-xs text-gray-400 ml-1">(Đang cập nhật)</span>
+                    )}
                 </div>
             </div>
 

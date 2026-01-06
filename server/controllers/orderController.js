@@ -6,12 +6,35 @@ import Product from '../models/Product.js';
 // @access  Private
 export const getOrders = async (req, res) => {
     try {
-        const { page = 1, limit = 10, status, paymentStatus } = req.query;
+        const { page = 1, limit = 10, status, paymentStatus, startDate, endDate } = req.query;
 
         // Build query
         const query = {};
         if (status) query.status = status;
         if (paymentStatus) query.paymentStatus = paymentStatus;
+
+        // Date range filter
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate) {
+                // Set to start of day
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                query.createdAt.$gte = start;
+            }
+            if (endDate) {
+                // Set to end of day
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                query.createdAt.$lte = end;
+            }
+        }
+        // Debug: Log query for troubleshooting
+        console.log('\ud83d\udd0d [getOrders] Query:', JSON.stringify(query, null, 2));
+        console.log('\ud83d\udcc5 [getOrders] Date Params:', { startDate, endDate });
+        // Debug: Log final query to check date filtering
+        console.log('\ud83d\udd0d [OrderController] Final Query:', JSON.stringify(query, null, 2));
+        console.log('\ud83d\udcc5 Date Range:', { startDate, endDate });
 
         // Execute query with pagination
         const orders = await Order.find(query)

@@ -79,12 +79,18 @@ export default function DashboardHome() {
     }, []);
 
     const formatCurrency = (value: number) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-            notation: 'compact',
-            maximumFractionDigits: 1,
-        }).format(value);
+        if (value >= 1_000_000_000) {
+            // >= 1 tỷ
+            return `${(value / 1_000_000_000).toFixed(1)} Tỷ VNĐ`;
+        } else if (value >= 1_000_000) {
+            // >= 1 triệu
+            return `${(value / 1_000_000).toFixed(0)} Triệu VNĐ`;
+        } else {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(value);
+        }
     };
 
     // Generate mini chart data

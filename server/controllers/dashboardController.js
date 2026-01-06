@@ -164,7 +164,7 @@ export const getDashboardCharts = async (req, res) => {
                     _id: {
                         $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
                     },
-                    value: { $sum: '$totalAmount' },
+                    revenue: { $sum: '$totalAmount' },
                 },
             },
             {
@@ -172,21 +172,20 @@ export const getDashboardCharts = async (req, res) => {
             },
         ]);
 
-        // Tạo mảng 30 ngày đầy đủ (có thể có ngày = 0)
+        // Zero-filling: Tạo mảng 30 ngày đầy đủ (có thể có ngày = 0)
         const revenueChart = [];
         for (let i = 29; i >= 0; i--) {
             const date = new Date();
             date.setDate(date.getDate() - i);
             date.setHours(0, 0, 0, 0);
 
-            const dateStr = date.toISOString().split('T')[0];
-            const displayDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const dateStr = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
 
             const foundData = revenueData.find((d) => d._id === dateStr);
 
             revenueChart.push({
-                date: displayDate,
-                value: foundData ? foundData.value : 0,
+                date: dateStr, // Return ISO format YYYY-MM-DD for frontend parsing
+                revenue: foundData ? foundData.revenue : 0,
             });
         }
 
@@ -239,11 +238,20 @@ export const getDashboardCharts = async (req, res) => {
         ]);
 
         // ============= RECENT ORDERS =============
-        const recentOrders = await Order.find()
+        const recentOrdersRaw = await Order.find()
             .sort({ createdAt: -1 })
             .limit(10)
             .select('orderCode customer totalAmount status createdAt')
             .lean();
+
+        // Transform to match frontend expected format
+        const recentOrders = recentOrdersRaw.map(order => ({
+            orderCode: order.orderCode,
+            customerName: order.customer?.name || 'N/A',
+            totalAmount: order.totalAmount,
+            status: order.status,
+            createdAt: order.createdAt,
+        }));
 
         res.status(200).json({
             success: true,
