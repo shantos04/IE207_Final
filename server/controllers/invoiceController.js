@@ -7,11 +7,32 @@ import User from '../models/User.js';
 // @access  Public (for testing)
 export const getInvoices = async (req, res) => {
     try {
-        const { page = 1, limit = 10, status } = req.query;
+        const { page = 1, limit = 10, status, startDate, endDate } = req.query;
 
         // Build query
         const query = {};
         if (status) query.status = status;
+
+        // Date range filter (by issueDate)
+        if (startDate || endDate) {
+            query.issueDate = {};
+            if (startDate) {
+                // Set to start of day
+                const start = new Date(startDate);
+                start.setHours(0, 0, 0, 0);
+                query.issueDate.$gte = start;
+            }
+            if (endDate) {
+                // Set to end of day
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                query.issueDate.$lte = end;
+            }
+        }
+
+        // Debug: Log query for troubleshooting
+        console.log('\ud83d\udd0d [getInvoices] Query:', JSON.stringify(query, null, 2));
+        console.log('\ud83d\udcc5 [getInvoices] Date Params:', { startDate, endDate });
 
         // Execute query with pagination
         const invoices = await Invoice.find(query)
