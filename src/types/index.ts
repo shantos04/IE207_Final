@@ -6,6 +6,7 @@ export interface User {
     fullName: string;
     role: 'admin' | 'manager' | 'staff';
     avatar?: string;
+    phone?: string;
 }
 
 export interface Product {
