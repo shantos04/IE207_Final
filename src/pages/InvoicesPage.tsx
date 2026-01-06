@@ -134,6 +134,54 @@ export default function InvoicesPage() {
         return true;
     });
 
+    // Helper function to generate pagination array with ellipsis
+    const generatePaginationArray = (currentPage: number, totalPages: number): (number | string)[] => {
+        const pages: (number | string)[] = [];
+
+        // If total pages <= 7, show all pages
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+
+        // Always show first page
+        pages.push(1);
+
+        // Calculate range around current page
+        const showLeftEllipsis = currentPage > 3;
+        const showRightEllipsis = currentPage < totalPages - 2;
+
+        if (!showLeftEllipsis && showRightEllipsis) {
+            // Near the start: [1, 2, 3, 4, '...', totalPages]
+            for (let i = 2; i <= 4; i++) {
+                pages.push(i);
+            }
+            pages.push('...');
+            pages.push(totalPages);
+        } else if (showLeftEllipsis && !showRightEllipsis) {
+            // Near the end: [1, '...', totalPages-3, totalPages-2, totalPages-1, totalPages]
+            pages.push('...');
+            for (let i = totalPages - 3; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else if (showLeftEllipsis && showRightEllipsis) {
+            // In the middle: [1, '...', currentPage-1, currentPage, currentPage+1, '...', totalPages]
+            pages.push('...');
+            pages.push(currentPage - 1);
+            pages.push(currentPage);
+            pages.push(currentPage + 1);
+            pages.push('...');
+            pages.push(totalPages);
+        } else {
+            // Edge case: just show all
+            for (let i = 2; i < totalPages; i++) {
+                pages.push(i);
+            }
+            pages.push(totalPages);
+        }
+
+        return pages;
+    };
+
     return (
         <div className="space-y-6">
             {/* Header & Toolbar */}
@@ -315,21 +363,66 @@ export default function InvoicesPage() {
                                     <div className="text-sm text-gray-500">
                                         Trang {currentPage} / {totalPages}
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                                            disabled={currentPage === 1}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <ChevronLeft className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <ChevronRight className="w-4 h-4" />
-                                        </button>
+                                    <div>
+                                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                            <button
+                                                onClick={() => setCurrentPage(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <span className="sr-only">Trước</span>
+                                                <svg
+                                                    className="h-5 w-5"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            {generatePaginationArray(currentPage, totalPages).map((page, index) => (
+                                                page === '...' ? (
+                                                    <span
+                                                        key={`ellipsis-${index}`}
+                                                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-default"
+                                                    >
+                                                        ...
+                                                    </span>
+                                                ) : (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page as number)}
+                                                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
+                                                                ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                            }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                )
+                                            ))}
+                                            <button
+                                                onClick={() => setCurrentPage(currentPage + 1)}
+                                                disabled={currentPage === totalPages}
+                                                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <span className="sr-only">Sau</span>
+                                                <svg
+                                                    className="h-5 w-5"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 20 20"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </nav>
                                     </div>
                                 </div>
                             </div>

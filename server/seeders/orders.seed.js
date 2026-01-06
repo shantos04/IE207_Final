@@ -34,12 +34,12 @@ const randomDateInLast90Days = () => {
     const daysAgo = Math.floor(Math.random() * 90);
     const date = new Date(now);
     date.setDate(date.getDate() - daysAgo);
-    
+
     // Add random time
     date.setHours(Math.floor(Math.random() * 24));
     date.setMinutes(Math.floor(Math.random() * 60));
     date.setSeconds(Math.floor(Math.random() * 60));
-    
+
     return date;
 };
 
@@ -78,7 +78,7 @@ const generateShippingAddress = (customerPhone) => {
     const street = VIETNAM_STREETS[Math.floor(Math.random() * VIETNAM_STREETS.length)];
     const district = `Quận ${Math.floor(Math.random() * 12) + 1}`;
     const city = VIETNAM_CITIES[Math.floor(Math.random() * VIETNAM_CITIES.length)];
-    
+
     return {
         address: `${streetNumber} ${street}, ${district}`,
         city: city,
@@ -100,7 +100,7 @@ const connectDB = async () => {
 const seedOrders = async () => {
     try {
         console.log('\n🚀 ORDERS SEEDING STARTED...\n');
-        
+
         await connectDB();
 
         // Clean existing data
@@ -135,7 +135,7 @@ const seedOrders = async () => {
             // Random date
             const createdAt = randomDateInLast90Days();
             const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
-            
+
             if (!ordersByMonth[monthKey]) {
                 ordersByMonth[monthKey] = 0;
             }
@@ -143,7 +143,7 @@ const seedOrders = async () => {
 
             // Random customer
             const customer = customers[Math.floor(Math.random() * customers.length)];
-            
+
             // Random user (staff who processed the order)
             const user = users[Math.floor(Math.random() * users.length)];
 
@@ -235,7 +235,7 @@ const seedOrders = async () => {
         Object.keys(ordersByMonth).sort().forEach(month => {
             const [year, monthNum] = month.split('-');
             const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-                              'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
             console.log(`   ${monthNames[parseInt(monthNum) - 1]} ${year}: ${ordersByMonth[month]} orders`);
         });
 
@@ -254,12 +254,12 @@ const seedOrders = async () => {
         // Statistics
         console.log('\n📈 SEEDING STATISTICS:');
         console.log('========================');
-        
+
         const statusStats = await Order.aggregate([
             { $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$totalAmount' } } },
             { $sort: { count: -1 } }
         ]);
-        
+
         console.log('\nOrders by Status:');
         statusStats.forEach(stat => {
             const percentage = ((stat.count / orders.length) * 100).toFixed(1);
@@ -269,10 +269,10 @@ const seedOrders = async () => {
         const totalRevenue = orders
             .filter(o => o.status === 'Delivered')
             .reduce((sum, o) => sum + o.totalAmount, 0);
-        
+
         console.log(`\n💰 Total Revenue (Delivered): ${totalRevenue.toLocaleString('vi-VN')} VND`);
         console.log(`📦 Average Order Value: ${Math.round(totalRevenue / orders.filter(o => o.status === 'Delivered').length).toLocaleString('vi-VN')} VND`);
-        
+
         console.log('\n✨ SEEDING COMPLETED SUCCESSFULLY!\n');
 
         process.exit(0);
