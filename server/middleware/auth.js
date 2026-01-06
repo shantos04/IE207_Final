@@ -61,3 +61,39 @@ export const authorize = (...roles) => {
         next();
     };
 };
+
+// Optional authentication - không bắt buộc nhưng sẽ gán user nếu có token
+export const optionalAuth = async (req, res, next) => {
+    let token;
+
+    // Check if token exists in headers
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith('Bearer')
+    ) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    // If no token, just continue without user
+    if (!token) {
+        return next();
+    }
+
+    try {
+        // Verify token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Get user from token
+        req.user = await User.findById(decoded.id).select('-password');
+
+        if (!req.user || !req.user.isActive) {
+            // Token invalid or user inactive, continue without user
+            req.user = null;
+        }
+    } catch (error) {
+        // Token verification failed, continue without user
+        req.user = null;
+    }
+
+    next();
+};

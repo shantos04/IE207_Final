@@ -8,6 +8,7 @@ import ProductsPage from './pages/ProductsPage'
 import OrdersPage from './pages/OrdersPage'
 import CustomersPage from './pages/CustomersPage'
 import InvoicesPage from './pages/InvoicesPage'
+import ReportsPage from './pages/ReportsPage'
 import AuthPage from './pages/AuthPage'
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
                         <Route path="products" element={<ProductsPage />} />
                         <Route path="customers" element={<CustomersPage />} />
                         <Route path="invoices" element={<InvoicesPage />} />
+                        <Route path="reports" element={<ReportsPage />} />
                     </Route>
 
                     {/* Catch all - redirect to dashboard */}
