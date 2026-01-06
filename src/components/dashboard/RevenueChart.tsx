@@ -23,23 +23,17 @@ export default function RevenueChart({ data }: RevenueChartProps) {
         }).format(value);
     };
 
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+    };
+
     return (
         <div className="bg-white rounded-2xl p-6 shadow-soft">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-800">Doanh thu</h3>
-                    <p className="text-sm text-gray-500 mt-1">Theo tháng trong năm</p>
-                </div>
-                <div className="flex gap-2">
-                    <button className="px-4 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors">
-                        Ngày
-                    </button>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
-                        Tuần
-                    </button>
-                    <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-colors">
-                        Tháng
-                    </button>
+                    <h3 className="text-lg font-semibold text-gray-800">Doanh thu 30 ngày</h3>
+                    <p className="text-sm text-gray-500 mt-1">Biểu đồ doanh thu theo ngày</p>
                 </div>
             </div>
 
@@ -54,9 +48,10 @@ export default function RevenueChart({ data }: RevenueChartProps) {
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                         <XAxis
-                            dataKey="month"
+                            dataKey="date"
                             stroke="#6b7280"
                             style={{ fontSize: '12px' }}
+                            tickFormatter={formatDate}
                         />
                         <YAxis
                             stroke="#6b7280"

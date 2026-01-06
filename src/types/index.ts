@@ -52,13 +52,27 @@ export interface DashboardStats {
     totalRevenue: number;
     totalOrders: number;
     totalCustomers: number;
-    conversionRate: number;
+    totalProducts: number;
     revenueChange: number;
     ordersChange: number;
     customersChange: number;
 }
 
 export interface RevenueData {
-    month: string;
+    date: string;
     revenue: number;
+}
+
+export interface StatusChartData {
+    status: string;
+    count: number;
+    revenue: number;
+}
+
+export interface TopProduct {
+    productName: string;
+    productCode: string;
+    totalQuantity: number;
+    totalRevenue: number;
+    orderCount: number;
 }

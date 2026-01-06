@@ -18,37 +18,32 @@ export interface AuthResponse {
     refreshToken?: string;
 }
 
-// Mock API responses for development
-const MOCK_USER: User = {
-    _id: '1',
-    username: 'admin',
-    email: 'admin@craftui.com',
-    fullName: 'Admin User',
-    role: 'admin',
-    avatar: '',
-};
-
 export const authService = {
     // Login
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
-            // Real API call (uncomment when backend is ready)
-            // const response = await api.post<AuthResponse>('/auth/login', credentials);
-            // return response.data;
+            const response = await api.post<{
+                success: boolean;
+                message: string;
+                data: {
+                    user: any;
+                    accessToken: string;
+                }
+            }>('/auth/login', credentials);
 
-            // Mock response for development
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    if (credentials.email === 'admin@craftui.com' && credentials.password === 'admin123') {
-                        resolve({
-                            user: MOCK_USER,
-                            accessToken: 'mock-jwt-token-' + Date.now(),
-                        });
-                    } else {
-                        reject(new Error('Email hoặc mật khẩu không đúng'));
-                    }
-                }, 1000);
-            });
+            // Transform backend response to AuthResponse format
+            return {
+                user: {
+                    _id: response.data.data.user._id,
+                    username: response.data.data.user.username,
+                    email: response.data.data.user.email,
+                    fullName: response.data.data.user.fullName,
+                    role: response.data.data.user.role,
+                    avatar: response.data.data.user.avatar,
+                    phone: response.data.data.user.phone,
+                },
+                accessToken: response.data.data.accessToken,
+            };
         } catch (error: any) {
             throw new Error(error.response?.data?.message || 'Đăng nhập thất bại');
         }
@@ -57,28 +52,28 @@ export const authService = {
     // Sign Up
     async signUp(data: SignUpData): Promise<AuthResponse> {
         try {
-            // Real API call (uncomment when backend is ready)
-            // const response = await api.post<AuthResponse>('/auth/signup', data);
-            // return response.data;
+            const response = await api.post<{
+                success: boolean;
+                message: string;
+                data: {
+                    user: any;
+                    accessToken: string;
+                }
+            }>('/auth/signup', data);
 
-            // Mock response for development
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    if (data.email && data.password.length >= 6) {
-                        resolve({
-                            user: {
-                                ...MOCK_USER,
-                                email: data.email,
-                                fullName: data.fullName,
-                                _id: 'new-user-' + Date.now(),
-                            },
-                            accessToken: 'mock-jwt-token-' + Date.now(),
-                        });
-                    } else {
-                        reject(new Error('Thông tin đăng ký không hợp lệ'));
-                    }
-                }, 1000);
-            });
+            // Transform backend response to AuthResponse format
+            return {
+                user: {
+                    _id: response.data.data.user._id,
+                    username: response.data.data.user.username,
+                    email: response.data.data.user.email,
+                    fullName: response.data.data.user.fullName,
+                    role: response.data.data.user.role,
+                    avatar: response.data.data.user.avatar,
+                    phone: response.data.data.user.phone,
+                },
+                accessToken: response.data.data.accessToken,
+            };
         } catch (error: any) {
             throw new Error(error.response?.data?.message || 'Đăng ký thất bại');
         }

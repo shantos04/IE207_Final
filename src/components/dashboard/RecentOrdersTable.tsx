@@ -5,13 +5,13 @@ interface RecentOrdersTableProps {
     orders: Order[];
 }
 
-const statusConfig = {
-    Draft: { label: 'Nháp', color: 'bg-gray-100 text-gray-800' },
-    Pending: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-800' },
-    Confirmed: { label: 'Đã xác nhận', color: 'bg-blue-100 text-blue-800' },
-    Shipped: { label: 'Đang giao', color: 'bg-green-100 text-green-800' },
-    Delivered: { label: 'Đã giao', color: 'bg-indigo-100 text-indigo-800' },
-    Cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-800' },
+const statusConfig: Record<string, { label: string; color: string }> = {
+    draft: { label: 'Nháp', color: 'bg-gray-100 text-gray-800' },
+    pending: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-800' },
+    processing: { label: 'Đang xử lý', color: 'bg-blue-100 text-blue-800' },
+    shipped: { label: 'Đang giao', color: 'bg-green-100 text-green-800' },
+    delivered: { label: 'Đã giao', color: 'bg-indigo-100 text-indigo-800' },
+    cancelled: { label: 'Đã hủy', color: 'bg-red-100 text-red-800' },
 };
 
 export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
@@ -77,14 +77,22 @@ export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div>
                                         <div className="text-sm font-medium text-gray-900">{order.customer.name}</div>
-                                        <div className="text-sm text-gray-500">{order.customer.email}</div>
+                                        {order.customer.email && (
+                                            <div className="text-sm text-gray-500">{order.customer.email}</div>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="text-sm text-gray-900">
-                                        {order.items[0].productName}
-                                        {order.items.length > 1 && (
-                                            <span className="text-gray-500"> +{order.items.length - 1} khác</span>
+                                        {order.items.length > 0 ? (
+                                            <>
+                                                {order.items[0].productName}
+                                                {order.items.length > 1 && (
+                                                    <span className="text-gray-500"> +{order.items.length - 1} khác</span>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <span className="text-gray-400">Không có sản phẩm</span>
                                         )}
                                     </div>
                                 </td>
@@ -95,10 +103,10 @@ export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                                     <span
                                         className={clsx(
                                             'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full',
-                                            statusConfig[order.status].color
+                                            statusConfig[order.status.toLowerCase()]?.color || 'bg-gray-100 text-gray-800'
                                         )}
                                     >
-                                        {statusConfig[order.status].label}
+                                        {statusConfig[order.status.toLowerCase()]?.label || order.status}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right">

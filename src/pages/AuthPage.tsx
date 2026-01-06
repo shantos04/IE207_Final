@@ -39,7 +39,7 @@ export default function AuthPage() {
         resolver: zodResolver(loginSchema),
         defaultValues: {
             email: 'admin@craftui.com',
-            password: 'admin123',
+            password: '123456',
         },
     });
 
@@ -106,13 +106,15 @@ export default function AuthPage() {
                         <form onSubmit={handleLoginSubmit(onLoginSubmit)} className="space-y-5">
                             {/* Email Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Email
                                 </label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
+                                        id="login-email"
                                         type="email"
+                                        autoComplete="email"
                                         {...registerLogin('email')}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                         placeholder="support@craftui.com"
@@ -125,13 +127,15 @@ export default function AuthPage() {
 
                             {/* Password Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Mật khẩu
                                 </label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
+                                        id="login-password"
                                         type="password"
+                                        autoComplete="current-password"
                                         {...registerLogin('password')}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                         placeholder="Nhập mật khẩu..."
@@ -156,13 +160,15 @@ export default function AuthPage() {
                         <form onSubmit={handleSignUpSubmit(onSignUpSubmit)} className="space-y-5">
                             {/* Full Name Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="signup-fullname" className="block text-sm font-medium text-gray-700 mb-2">
                                     Họ và tên
                                 </label>
                                 <div className="relative">
                                     <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
+                                        id="signup-fullname"
                                         type="text"
+                                        autoComplete="name"
                                         {...registerSignUp('fullName')}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                         placeholder="Craft UI"
@@ -175,13 +181,15 @@ export default function AuthPage() {
 
                             {/* Email Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2">
                                     Email
                                 </label>
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
+                                        id="signup-email"
                                         type="email"
+                                        autoComplete="email"
                                         {...registerSignUp('email')}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                         placeholder="support@craftui.com"
@@ -194,13 +202,15 @@ export default function AuthPage() {
 
                             {/* Password Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2">
                                     Mật khẩu
                                 </label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                     <input
+                                        id="signup-password"
                                         type="password"
+                                        autoComplete="new-password"
                                         {...registerSignUp('password')}
                                         className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                                         placeholder="Nhập mật khẩu..."
@@ -214,11 +224,12 @@ export default function AuthPage() {
                             {/* Terms Checkbox */}
                             <div className="flex items-start">
                                 <input
+                                    id="signup-terms"
                                     type="checkbox"
                                     {...registerSignUp('agreeToTerms')}
                                     className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                                 />
-                                <label className="ml-2 text-sm text-gray-600">
+                                <label htmlFor="signup-terms" className="ml-2 text-sm text-gray-600">
                                     Tôi đồng ý với điều khoản & điều kiện
                                 </label>
                             </div>
@@ -249,7 +260,11 @@ export default function AuthPage() {
 
                     {/* Social Login Buttons */}
                     <div className="grid grid-cols-3 gap-3">
-                        <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        <button
+                            type="button"
+                            aria-label="Đăng nhập bằng Twitter"
+                            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                        >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path
                                     fill="#1DA1F2"
@@ -257,10 +272,18 @@ export default function AuthPage() {
                                 />
                             </svg>
                         </button>
-                        <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        <button
+                            type="button"
+                            aria-label="Đăng nhập bằng Google"
+                            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                        >
                             <Chrome className="w-5 h-5 text-gray-600" />
                         </button>
-                        <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                        <button
+                            type="button"
+                            aria-label="Đăng nhập bằng Facebook"
+                            className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                        >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path
                                     fill="#1877F2"
