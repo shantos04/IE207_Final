@@ -48,19 +48,20 @@ function App() {
                         }}
                     />
                     <Routes>
-                        {/* Public Client Routes */}
-                        <Route path="/" element={<ClientLayout />}>
-                            <Route index element={<HomePage />} />
-                            <Route path="shop" element={<ShopPage />} />
-                            <Route path="product/:id" element={<ProductDetailPage />} />
-                            <Route path="cart" element={<CartPage />} />
+                        {/* 1. Public Auth Routes (No Layout) */}
+                        <Route path="/login" element={<AuthPage />} />
+                        <Route path="/auth" element={<AuthPage />} />
+                        <Route path="/register" element={<AuthPage />} />
+
+                        {/* 2. Client Routes (Customer Shopping Interface) */}
+                        <Route element={<ClientLayout />}>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/shop" element={<ShopPage />} />
+                            <Route path="/product/:id" element={<ProductDetailPage />} />
+                            <Route path="/cart" element={<CartPage />} />
                         </Route>
 
-                        {/* Auth Route */}
-                        <Route path="/auth" element={<AuthPage />} />
-                        <Route path="/login" element={<AuthPage />} />
-
-                        {/* Protected Admin Routes */}
+                        {/* 3. Admin Routes (Protected Management Interface) */}
                         <Route
                             path="/admin"
                             element={
@@ -69,17 +70,19 @@ function App() {
                                 </ProtectedRoute>
                             }
                         >
-                            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                            {/* Auto redirect /admin to /admin/dashboard */}
+                            <Route index element={<Navigate to="dashboard" replace />} />
+
                             <Route path="dashboard" element={<DashboardHome />} />
-                            <Route path="orders" element={<OrdersPage />} />
                             <Route path="products" element={<ProductsPage />} />
+                            <Route path="orders" element={<OrdersPage />} />
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="invoices" element={<InvoicesPage />} />
                             <Route path="reports" element={<ReportsPage />} />
                             <Route path="settings" element={<SettingsPage />} />
                         </Route>
 
-                        {/* Catch all - redirect to home */}
+                        {/* 4. Catch All - 404 Redirect */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </CartProvider>

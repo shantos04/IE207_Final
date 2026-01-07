@@ -21,13 +21,13 @@ interface SidebarProps {
 }
 
 const menuItems = [
-    { icon: Home, label: 'Tổng quan', path: '/dashboard' },
-    { icon: Package, label: 'Sản phẩm', path: '/products' },
-    { icon: ShoppingCart, label: 'Đơn hàng', path: '/orders' },
-    { icon: Users, label: 'Khách hàng', path: '/customers' },
-    { icon: FileText, label: 'Hóa đơn', path: '/invoices' },
-    { icon: BarChart3, label: 'Báo cáo', path: '/reports' },
-    { icon: Settings, label: 'Cài đặt', path: '/settings' },
+    { icon: Home, label: 'Tổng quan', path: '/admin/dashboard' },
+    { icon: Package, label: 'Sản phẩm', path: '/admin/products' },
+    { icon: ShoppingCart, label: 'Đơn hàng', path: '/admin/orders' },
+    { icon: Users, label: 'Khách hàng', path: '/admin/customers' },
+    { icon: FileText, label: 'Hóa đơn', path: '/admin/invoices' },
+    { icon: BarChart3, label: 'Báo cáo', path: '/admin/reports' },
+    { icon: Settings, label: 'Cài đặt', path: '/admin/settings' },
 ];
 
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {

@@ -56,7 +56,7 @@ export default function AuthPage() {
         try {
             await login(data);
             toast.success('Đăng nhập thành công!');
-            navigate('/dashboard');
+            navigate('/admin/dashboard');
         } catch (error: any) {
             toast.error(error.message || 'Đăng nhập thất bại');
         }
@@ -70,7 +70,7 @@ export default function AuthPage() {
                 password: data.password,
             });
             toast.success('Đăng ký thành công!');
-            navigate('/dashboard');
+            navigate('/admin/dashboard');
         } catch (error: any) {
             toast.error(error.message || 'Đăng ký thất bại');
         }
