@@ -1,5 +1,5 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import {
@@ -27,8 +27,26 @@ export default function ClientLayout() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false);
+            }
+        };
+
+        if (showUserMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showUserMenu]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -102,35 +120,47 @@ export default function ClientLayout() {
 
                             {/* User Menu */}
                             {user ? (
-                                <div className="relative">
+                                <div className="relative" ref={dropdownRef}>
                                     <button
                                         onClick={() => setShowUserMenu(!showUserMenu)}
-                                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition"
+                                        className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg transition focus:outline-none"
                                     >
                                         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                                            <span className="text-white font-medium text-sm">
-                                                {user.name?.charAt(0).toUpperCase()}
-                                            </span>
+                                            {user.avatar ? (
+                                                <img
+                                                    src={user.avatar}
+                                                    alt={user.fullName}
+                                                    className="w-full h-full rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-white font-medium text-sm">
+                                                    {user.fullName?.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
                                     </button>
 
                                     {showUserMenu && (
-                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
-                                            <div className="px-4 py-2 border-b border-gray-200">
-                                                <p className="font-medium text-gray-900">{user.name}</p>
-                                                <p className="text-sm text-gray-500">{user.email}</p>
+                                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                                            <div className="px-4 py-3 border-b border-gray-100">
+                                                <p className="font-semibold text-gray-900 truncate">
+                                                    {user.fullName}
+                                                </p>
+                                                <p className="text-sm text-gray-500 truncate">
+                                                    {user.email}
+                                                </p>
                                             </div>
                                             <Link
-                                                to="/profile"
-                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 text-gray-700"
+                                                to="/account/profile"
+                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
                                                 <User className="w-4 h-4" />
                                                 <span>Tài khoản</span>
                                             </Link>
                                             <Link
-                                                to="/orders"
-                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 text-gray-700"
+                                                to="/account/orders"
+                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
                                                 <Package className="w-4 h-4" />
@@ -139,20 +169,22 @@ export default function ClientLayout() {
                                             {user.role === 'admin' && (
                                                 <Link
                                                     to="/admin"
-                                                    className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 text-gray-700"
+                                                    className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
                                                     onClick={() => setShowUserMenu(false)}
                                                 >
                                                     <Settings className="w-4 h-4" />
                                                     <span>Quản trị</span>
                                                 </Link>
                                             )}
-                                            <button
-                                                onClick={handleLogout}
-                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 text-red-600 w-full"
-                                            >
-                                                <LogOut className="w-4 h-4" />
-                                                <span>Đăng xuất</span>
-                                            </button>
+                                            <div className="border-t border-gray-100 mt-1 pt-1">
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 text-red-600 w-full transition"
+                                                >
+                                                    <LogOut className="w-4 h-4" />
+                                                    <span>Đăng xuất</span>
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

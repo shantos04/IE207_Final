@@ -5,6 +5,7 @@ import { CartProvider } from './contexts/CartContext'
 import AdminRoute from './components/auth/AdminRoute'
 import DashboardLayout from './components/layout/DashboardLayout'
 import ClientLayout from './layouts/ClientLayout'
+import AccountLayout from './pages/client/account/AccountLayout'
 import DashboardHome from './pages/DashboardHome'
 import ProductsPage from './pages/ProductsPage'
 import OrdersPage from './pages/OrdersPage'
@@ -17,6 +18,9 @@ import HomePage from './pages/HomePage'
 import ShopPage from './pages/ShopPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
+import ProfilePage from './pages/client/account/ProfilePage'
+import MyOrdersPage from './pages/client/account/MyOrdersPage'
+import ChangePasswordPage from './pages/client/account/ChangePasswordPage'
 
 function App() {
     return (
@@ -59,6 +63,15 @@ function App() {
                             <Route path="/shop" element={<ShopPage />} />
                             <Route path="/product/:id" element={<ProductDetailPage />} />
                             <Route path="/cart" element={<CartPage />} />
+
+                            {/* Account Routes - Nested under ClientLayout */}
+                            <Route path="account" element={<AccountLayout />}>
+                                {/* Redirect /account to /account/profile */}
+                                <Route index element={<Navigate to="profile" replace />} />
+                                <Route path="profile" element={<ProfilePage />} />
+                                <Route path="orders" element={<MyOrdersPage />} />
+                                <Route path="password" element={<ChangePasswordPage />} />
+                            </Route>
                         </Route>
 
                         {/* 3. Admin Routes (Protected Management Interface) */}

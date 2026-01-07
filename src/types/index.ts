@@ -7,6 +7,7 @@ export interface User {
     role: 'admin' | 'manager' | 'staff';
     avatar?: string;
     phone?: string;
+    address?: string;
 }
 
 export interface Product {
