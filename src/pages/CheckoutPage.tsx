@@ -292,11 +292,10 @@ export default function CheckoutPage() {
                                                 <input
                                                     type="text"
                                                     {...register('fullName')}
-                                                    className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                                                        errors.fullName
+                                                    className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.fullName
                                                             ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                                                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                                                    }`}
+                                                        }`}
                                                     placeholder="Nguyễn Văn A"
                                                 />
                                             </div>
@@ -315,11 +314,10 @@ export default function CheckoutPage() {
                                                 <input
                                                     type="tel"
                                                     {...register('phone')}
-                                                    className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                                                        errors.phone
+                                                    className={`w-full pl-11 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.phone
                                                             ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                                                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                                                    }`}
+                                                        }`}
                                                     placeholder="VD: 0909123456"
                                                 />
                                             </div>
@@ -338,11 +336,10 @@ export default function CheckoutPage() {
                                         <input
                                             type="text"
                                             {...register('address')}
-                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                                                errors.address
+                                            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.address
                                                     ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                                                     : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                                            }`}
+                                                }`}
                                             placeholder="Số nhà, tên đường"
                                         />
                                         {errors.address && (
@@ -382,11 +379,10 @@ export default function CheckoutPage() {
                                             <input
                                                 type="text"
                                                 {...register('city')}
-                                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                                                    errors.city
+                                                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${errors.city
                                                         ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                                                         : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                                                }`}
+                                                    }`}
                                                 placeholder="TP. Hồ Chí Minh"
                                             />
                                             {errors.city && (

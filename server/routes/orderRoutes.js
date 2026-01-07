@@ -15,8 +15,8 @@ const router = express.Router();
 // Tạm thời comment protect để test - bỏ comment khi production
 // router.use(protect);
 
-// Public routes for testing
-router.route('/').get(getOrders).post(createOrder);
+// Protected routes - createOrder requires authentication
+router.route('/').get(getOrders).post(protect, createOrder);
 
 // IMPORTANT: Route này phải đặt TRƯỚC /:id để tránh conflict
 router.route('/myorders').get(protect, getMyOrders);

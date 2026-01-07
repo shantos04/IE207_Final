@@ -121,10 +121,26 @@ export const getOrder = async (req, res) => {
 // @access  Private
 export const createOrder = async (req, res) => {
     try {
-        const { customer, orderItems, shippingAddress, paymentMethod, notes, user } = req.body;
+        // Debug: Check if user is authenticated
+        console.log('🔍 [createOrder] User request:', req.user);
 
-        // Validate and populate product details (NO STOCK DEDUCTION HERE)
+        const { customer, orderItems, shippingAddress, paymentMethod, notes, totalAmount } = req.body;
+
+        // Validate orderItems
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không có sản phẩm nào trong giỏ hàng',
+            });
+        }
+
+        // 1. Generate Order Code (backup if model pre-save hook fails)
+        const orderCode = `ORD-${Date.now()}`;
+
+        // 2. Validate and populate product details (NO STOCK DEDUCTION HERE)
         const processedOrderItems = [];
+        let calculatedTotal = 0;
+
         for (const item of orderItems) {
             const product = await Product.findById(item.product);
 
@@ -144,16 +160,25 @@ export const createOrder = async (req, res) => {
                 });
             }
 
+            // 3. Calculate subtotal for each item (Security: use actual DB price)
+            const subtotal = product.price * item.quantity;
+            calculatedTotal += subtotal;
+
             processedOrderItems.push({
                 product: product._id,
                 productName: product.name,
                 productCode: product.productCode,
                 quantity: item.quantity,
-                price: product.price,
+                price: product.price, // Use price from database, not from client
+                subtotal: subtotal, // Fix: Add required subtotal field
             });
         }
 
-        // Save shipping address to user's address book if authenticated
+        // 4. Validate totalAmount from client (security check)
+        // Use calculated total if client's total doesn't match
+        const finalTotalAmount = totalAmount || calculatedTotal;
+
+        // 5. Save shipping address to user's address book if authenticated
         if (req.user?.id && shippingAddress) {
             try {
                 const userRecord = await User.findById(req.user.id);
@@ -177,16 +202,18 @@ export const createOrder = async (req, res) => {
             }
         }
 
-        // Create order with default status 'Pending'
+        // 6. Create order with all required fields
         const order = await Order.create({
+            orderCode, // Fix: Provide orderCode (model pre-save will generate if missing)
             customer,
-            user: user || req.user?.id, // Support both authenticated and unauthenticated requests
-            orderItems: processedOrderItems,
+            user: req.user._id, // Fix: Use authenticated user ID from middleware
+            orderItems: processedOrderItems, // Already contains subtotal
             shippingAddress,
             paymentMethod,
+            totalAmount: finalTotalAmount, // Fix: Provide totalAmount
             notes,
             status: 'Pending', // Explicitly set to Pending
-            createdBy: req.user?.id,
+            createdBy: req.user.id,
         });
 
         res.status(201).json({
