@@ -303,3 +303,190 @@ export const getOverviewStats = async (req, res) => {
         });
     }
 };
+
+/**
+ * API 4: Báo cáo Phân phối Trạng thái Đơn hàng (Order Status Distribution)
+ * GET /api/analytics/order-status-distribution
+ */
+export const getOrderStatusDistribution = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        // Build match query
+        const matchQuery = {};
+
+        // Add date filter if provided
+        if (startDate || endDate) {
+            matchQuery.createdAt = {};
+            if (startDate) {
+                matchQuery.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                matchQuery.createdAt.$lte = new Date(endDate);
+            }
+        }
+
+        const statusDistribution = await Order.aggregate([
+            {
+                $match: matchQuery
+            },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]);
+
+        // Calculate total orders for percentage
+        const totalOrders = statusDistribution.reduce((sum, item) => sum + item.count, 0);
+
+        // Format data for pie chart with Vietnamese labels
+        const formattedData = statusDistribution.map(item => ({
+            name: item._id,
+            value: item.count,
+            percentage: totalOrders > 0 ? ((item.count / totalOrders) * 100).toFixed(1) : '0'
+        }));
+
+        res.json({
+            success: true,
+            data: formattedData
+        });
+    } catch (error) {
+        console.error('Error in getOrderStatusDistribution:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy phân phối trạng thái đơn hàng',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * API 5: Báo cáo Hiệu quả Bán hàng theo Sản phẩm (Product Sales Performance)
+ * GET /api/analytics/product-sales-performance
+ */
+export const getProductSalesPerformance = async (req, res) => {
+    try {
+        const { startDate, endDate, limit = 10 } = req.query;
+
+        // Build match query
+        const matchQuery = {
+            status: { $in: ['Delivered', 'Confirmed'] } // Only completed orders
+        };
+
+        // Add date filter if provided
+        if (startDate || endDate) {
+            matchQuery.createdAt = {};
+            if (startDate) {
+                matchQuery.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                matchQuery.createdAt.$lte = new Date(endDate);
+            }
+        }
+
+        const productPerformance = await Order.aggregate([
+            {
+                $match: matchQuery
+            },
+            {
+                $unwind: '$orderItems' // Unwind orderItems array
+            },
+            {
+                $group: {
+                    _id: '$orderItems.productName',
+                    productCode: { $first: '$orderItems.productCode' },
+                    totalQty: { $sum: '$orderItems.quantity' },
+                    totalRevenue: { $sum: '$orderItems.subtotal' },
+                    orderCount: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { totalQty: -1 } // Sort by quantity sold (descending)
+            },
+            {
+                $limit: parseInt(limit)
+            },
+            {
+                $project: {
+                    _id: 0,
+                    productName: '$_id',
+                    productCode: 1,
+                    totalQty: 1,
+                    totalRevenue: 1,
+                    orderCount: 1
+                }
+            }
+        ]);
+
+        res.json({
+            success: true,
+            data: productPerformance
+        });
+    } catch (error) {
+        console.error('Error in getProductSalesPerformance:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy hiệu quả bán hàng theo sản phẩm',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * API 6: Báo cáo Doanh thu theo Đơn hàng (Revenue by Order)
+ * GET /api/analytics/revenue-by-order
+ */
+export const getRevenueByOrder = async (req, res) => {
+    try {
+        const { startDate, endDate, limit = 20 } = req.query;
+
+        // Build match query - only completed orders
+        const matchQuery = {
+            status: { $in: ['Delivered', 'Confirmed'] }
+        };
+
+        // Add date filter if provided
+        if (startDate || endDate) {
+            matchQuery.createdAt = {};
+            if (startDate) {
+                matchQuery.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                matchQuery.createdAt.$lte = new Date(endDate);
+            }
+        }
+
+        const revenueByOrder = await Order.find(matchQuery)
+            .select('orderCode createdAt customer.name customer.email totalPrice status')
+            .sort({ totalPrice: -1 }) // Sort by totalPrice descending (highest first)
+            .limit(parseInt(limit))
+            .lean();
+
+        // Format data
+        const formattedData = revenueByOrder.map(order => ({
+            orderCode: order.orderCode,
+            orderDate: order.createdAt,
+            customerName: order.customer.name,
+            customerEmail: order.customer.email,
+            totalPrice: order.totalPrice,
+            status: order.status
+        }));
+
+        res.json({
+            success: true,
+            data: formattedData
+        });
+    } catch (error) {
+        console.error('Error in getRevenueByOrder:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy doanh thu theo đơn hàng',
+            error: error.message
+        });
+    }
+};

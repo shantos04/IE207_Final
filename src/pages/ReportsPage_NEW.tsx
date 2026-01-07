@@ -112,7 +112,7 @@ type DateRange = '7days' | 'thisMonth' | 'thisYear';
 export default function ReportsPage() {
     const [dateRange, setDateRange] = useState<DateRange>('thisMonth');
     const [loading, setLoading] = useState(true);
-    
+
     // State for the 3 new reports
     const [statusDistribution, setStatusDistribution] = useState<OrderStatusDistribution[]>([]);
     const [productPerformance, setProductPerformance] = useState<ProductSalesPerformance[]>([]);
