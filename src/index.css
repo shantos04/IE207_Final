@@ -18,3 +18,14 @@ body {
 * {
     box-sizing: border-box;
 }
+/* Remove decorative diagonal lines from footer */
+footer,
+footer * {
+    background-image: none !important;
+}
+
+footer::before,
+footer::after {
+    content: none !important;
+    display: none !important;
+}

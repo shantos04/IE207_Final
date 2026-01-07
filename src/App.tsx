@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
-import ProtectedRoute from './components/auth/ProtectedRoute'
+import AdminRoute from './components/auth/AdminRoute'
 import DashboardLayout from './components/layout/DashboardLayout'
 import ClientLayout from './layouts/ClientLayout'
 import DashboardHome from './pages/DashboardHome'
@@ -65,9 +65,9 @@ function App() {
                         <Route
                             path="/admin"
                             element={
-                                <ProtectedRoute>
+                                <AdminRoute>
                                     <DashboardLayout />
-                                </ProtectedRoute>
+                                </AdminRoute>
                             }
                         >
                             {/* Auto redirect /admin to /admin/dashboard */}

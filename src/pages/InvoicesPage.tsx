@@ -163,7 +163,7 @@ export default function InvoicesPage() {
             const search = searchTerm.toLowerCase();
             return (
                 invoice.invoiceNumber.toLowerCase().includes(search) ||
-                invoice.user.fullName.toLowerCase().includes(search)
+                (invoice.user?.fullName || '').toLowerCase().includes(search)
             );
         }
         return true;
@@ -442,9 +442,9 @@ export default function InvoicesPage() {
                                             {/* Khách hàng */}
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {invoice.user.fullName}
+                                                    {invoice.user?.fullName || 'N/A'}
                                                 </div>
-                                                <div className="text-sm text-gray-500">{invoice.user.email}</div>
+                                                <div className="text-sm text-gray-500">{invoice.user?.email || 'N/A'}</div>
                                             </td>
 
                                             {/* Ngày xuất */}

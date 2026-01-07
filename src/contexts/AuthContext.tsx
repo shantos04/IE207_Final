@@ -6,8 +6,8 @@ interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (credentials: LoginCredentials) => Promise<void>;
-    signUp: (data: SignUpData) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<User>;
+    signUp: (data: SignUpData) => Promise<User>;
     logout: () => void;
     updateUser: (userData: Partial<User>) => void;
 }
@@ -33,12 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response: AuthResponse = await authService.login(credentials);
         authService.saveAuthData(response);
         setUser(response.user);
+        return response.user; // Return user for role-based navigation
     };
 
     const signUp = async (data: SignUpData) => {
         const response: AuthResponse = await authService.signUp(data);
         authService.saveAuthData(response);
         setUser(response.user);
+        return response.user; // Return user for role-based navigation
     };
 
     const logout = () => {

@@ -235,82 +235,91 @@ export default function ClientLayout() {
             </main>
 
             {/* Footer */}
-            <footer className="bg-gray-900 text-white mt-16">
-                <div className="container mx-auto px-4 py-12">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {/* About */}
+            <footer className="bg-gray-900 text-gray-300 mt-16 relative overflow-hidden">
+                {/* Main Content */}
+                <div className="container mx-auto px-6 py-12 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        {/* Column 1 - About */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4">Về chúng tôi</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed">
-                                ShopHub là nền tảng mua sắm trực tuyến hàng đầu, cung cấp các sản phẩm chất lượng với giá tốt nhất.
-                            </p>
-                            <div className="flex items-center space-x-2 mt-4">
+                            <div className="flex items-center space-x-2 mb-4">
                                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                                    <Package className="w-5 h-5" />
+                                    <Package className="w-5 h-5 text-white" />
                                 </div>
-                                <span className="text-xl font-bold">ShopHub</span>
+                                <h3 className="text-white text-xl font-bold">ShopHub</h3>
                             </div>
+                            <p className="text-gray-400 text-sm leading-relaxed">
+                                Nền tảng mua sắm trực tuyến hàng đầu, cung cấp linh kiện điện tử chất lượng cao với giá tốt nhất.
+                            </p>
                         </div>
 
-                        {/* Quick Links */}
+                        {/* Column 2 - Quick Links */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4">Liên kết nhanh</h3>
+                            <h3 className="text-white text-lg font-bold mb-4">Liên kết nhanh</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link to="/" className="text-gray-400 hover:text-white transition text-sm">
+                                    <Link to="/" className="text-gray-400 hover:text-blue-400 transition text-sm">
                                         Trang chủ
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/shop" className="text-gray-400 hover:text-white transition text-sm">
+                                    <Link to="/shop" className="text-gray-400 hover:text-blue-400 transition text-sm">
                                         Sản phẩm
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/about" className="text-gray-400 hover:text-white transition text-sm">
+                                    <Link to="/cart" className="text-gray-400 hover:text-blue-400 transition text-sm">
+                                        Giỏ hàng
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to="/about" className="text-gray-400 hover:text-blue-400 transition text-sm">
                                         Giới thiệu
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/contact" className="text-gray-400 hover:text-white transition text-sm">
+                                    <Link to="/contact" className="text-gray-400 hover:text-blue-400 transition text-sm">
                                         Liên hệ
                                     </Link>
                                 </li>
-                                <li>
-                                    <Link to="/cart" className="text-gray-400 hover:text-white transition text-sm">
-                                        Giỏ hàng
-                                    </Link>
-                                </li>
                             </ul>
                         </div>
 
-                        {/* Contact Info */}
+                        {/* Column 3 - Contact Info */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4">Thông tin liên hệ</h3>
-                            <ul className="space-y-3 text-sm">
-                                <li className="flex items-start space-x-2 text-gray-400">
-                                    <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                                    <span>0123 456 789</span>
+                            <h3 className="text-white text-lg font-bold mb-4">Liên hệ</h3>
+                            <ul className="space-y-3">
+                                <li className="flex items-start space-x-3 text-sm">
+                                    <Phone className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                        <p className="text-gray-400">Hotline</p>
+                                        <p className="text-white">0123 456 789</p>
+                                    </div>
                                 </li>
-                                <li className="flex items-start space-x-2 text-gray-400">
-                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <li className="flex items-start space-x-3 text-sm">
+                                    <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
-                                    <span>support@shophub.com</span>
+                                    <div>
+                                        <p className="text-gray-400">Email</p>
+                                        <p className="text-white">support@shophub.com</p>
+                                    </div>
                                 </li>
-                                <li className="flex items-start space-x-2 text-gray-400">
-                                    <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <li className="flex items-start space-x-3 text-sm">
+                                    <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span>123 Nguyễn Văn Linh, Quận 7, TP.HCM</span>
+                                    <div>
+                                        <p className="text-gray-400">Địa chỉ</p>
+                                        <p className="text-white">123 Nguyễn Văn Linh, Q7, TP.HCM</p>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
 
-                        {/* Social Media */}
+                        {/* Column 4 - Social Media */}
                         <div>
-                            <h3 className="text-lg font-bold mb-4">Mạng xã hội</h3>
+                            <h3 className="text-white text-lg font-bold mb-4">Mạng xã hội</h3>
                             <p className="text-gray-400 text-sm mb-4">
                                 Theo dõi chúng tôi để cập nhật thông tin mới nhất
                             </p>
@@ -318,35 +327,41 @@ export default function ClientLayout() {
                                 <a
                                     href="#"
                                     className="w-10 h-10 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition"
+                                    aria-label="Facebook"
                                 >
                                     <Facebook className="w-5 h-5" />
                                 </a>
                                 <a
                                     href="#"
                                     className="w-10 h-10 bg-gray-800 hover:bg-blue-400 rounded-lg flex items-center justify-center transition"
+                                    aria-label="Twitter"
                                 >
                                     <Twitter className="w-5 h-5" />
                                 </a>
                                 <a
                                     href="#"
                                     className="w-10 h-10 bg-gray-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition"
+                                    aria-label="Instagram"
                                 >
                                     <Instagram className="w-5 h-5" />
                                 </a>
                                 <a
                                     href="#"
                                     className="w-10 h-10 bg-gray-800 hover:bg-red-600 rounded-lg flex items-center justify-center transition"
+                                    aria-label="Youtube"
                                 >
                                     <Youtube className="w-5 h-5" />
                                 </a>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Bottom Footer */}
-                    <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-                        <p className="text-gray-400 text-sm">
-                            © 2026 ShopHub. Bản quyền thuộc về ShopHub. Thiết kế bởi Team IE207.
+                {/* Copyright Bar - Separated Section */}
+                <div className="border-t border-gray-800 relative z-10">
+                    <div className="container mx-auto px-6 py-4">
+                        <p className="text-center text-sm text-gray-400">
+                            &copy; 2026 ShopHub. Bản quyền thuộc về ShopHub. Thiết kế bởi Team IE207.
                         </p>
                     </div>
                 </div>

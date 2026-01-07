@@ -54,9 +54,15 @@ export default function AuthPage() {
 
     const onLoginSubmit = async (data: LoginFormData) => {
         try {
-            await login(data);
+            const user = await login(data);
             toast.success('Đăng nhập thành công!');
-            navigate('/admin/dashboard');
+
+            // Role-based navigation
+            if (user.role === 'admin' || user.role === 'manager' || user.role === 'staff') {
+                navigate('/admin/dashboard'); // Admin/Manager/Staff -> Admin Dashboard
+            } else {
+                navigate('/'); // Customer -> Home page
+            }
         } catch (error: any) {
             toast.error(error.message || 'Đăng nhập thất bại');
         }
@@ -64,13 +70,19 @@ export default function AuthPage() {
 
     const onSignUpSubmit = async (data: SignUpFormData) => {
         try {
-            await signUp({
+            const user = await signUp({
                 fullName: data.fullName,
                 email: data.email,
                 password: data.password,
             });
             toast.success('Đăng ký thành công!');
-            navigate('/admin/dashboard');
+
+            // Role-based navigation
+            if (user.role === 'admin' || user.role === 'manager' || user.role === 'staff') {
+                navigate('/admin/dashboard'); // Admin/Manager/Staff -> Admin Dashboard
+            } else {
+                navigate('/'); // Customer -> Home page
+            }
         } catch (error: any) {
             toast.error(error.message || 'Đăng ký thất bại');
         }
