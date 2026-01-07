@@ -6,6 +6,7 @@ import {
     updateOrderStatus,
     updatePaymentStatus,
     cancelOrder,
+    getMyOrders,
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -16,6 +17,9 @@ const router = express.Router();
 
 // Public routes for testing
 router.route('/').get(getOrders).post(createOrder);
+
+// IMPORTANT: Route này phải đặt TRƯỚC /:id để tránh conflict
+router.route('/myorders').get(protect, getMyOrders);
 
 router.route('/:id').get(getOrder);
 

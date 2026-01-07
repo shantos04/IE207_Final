@@ -1,6 +1,28 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 
+// @desc    Get my orders (Customer)
+// @route   GET /api/orders/myorders
+// @access  Private
+export const getMyOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ user: req.user.id })
+            .populate('orderItems.product', 'name productCode imageUrl price')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: orders,
+            total: orders.length,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 // @desc    Get all orders
 // @route   GET /api/orders
 // @access  Private

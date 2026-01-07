@@ -20,6 +20,7 @@ import invoiceRoutes from './routes/invoiceRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import settingRoutes from './routes/settingRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -82,6 +83,7 @@ app.get('/', (req, res) => {
             analytics: '/api/analytics',
             settings: '/api/settings',
             dashboard: '/api/dashboard',
+            users: '/api/users',
         },
     });
 });
@@ -95,6 +97,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/users', userRoutes);
 
 // ============= ERROR HANDLING =============
 
