@@ -8,6 +8,7 @@ export interface User {
     avatar?: string;
     phone?: string;
     address?: string;
+    addresses?: any[];
 }
 
 export interface Product {

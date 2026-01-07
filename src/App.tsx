@@ -18,6 +18,7 @@ import HomePage from './pages/HomePage'
 import ShopPage from './pages/ShopPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
 import ProfilePage from './pages/client/account/ProfilePage'
 import MyOrdersPage from './pages/client/account/MyOrdersPage'
 import ChangePasswordPage from './pages/client/account/ChangePasswordPage'
@@ -63,6 +64,7 @@ function App() {
                             <Route path="/shop" element={<ShopPage />} />
                             <Route path="/product/:id" element={<ProductDetailPage />} />
                             <Route path="/cart" element={<CartPage />} />
+                            <Route path="/checkout" element={<CheckoutPage />} />
 
                             {/* Account Routes - Nested under ClientLayout */}
                             <Route path="account" element={<AccountLayout />}>

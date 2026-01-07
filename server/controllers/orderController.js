@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import User from '../models/User.js';
 
 // @desc    Get my orders (Customer)
 // @route   GET /api/orders/myorders
@@ -122,7 +123,7 @@ export const createOrder = async (req, res) => {
     try {
         const { customer, orderItems, shippingAddress, paymentMethod, notes, user } = req.body;
 
-        // Validate and populate product details
+        // Validate and populate product details (NO STOCK DEDUCTION HERE)
         const processedOrderItems = [];
         for (const item of orderItems) {
             const product = await Product.findById(item.product);
@@ -134,10 +135,12 @@ export const createOrder = async (req, res) => {
                 });
             }
 
+            // Note: We check stock but DON'T deduct it yet
+            // Stock will be deducted when order status changes to 'Shipped'
             if (product.stock < item.quantity) {
                 return res.status(400).json({
                     success: false,
-                    message: `Sản phẩm ${product.name} không đủ hàng`,
+                    message: `Sản phẩm ${product.name} hiện tại không đủ hàng (còn ${product.stock})`,
                 });
             }
 
@@ -148,13 +151,33 @@ export const createOrder = async (req, res) => {
                 quantity: item.quantity,
                 price: product.price,
             });
-
-            // Update stock
-            product.stock -= item.quantity;
-            await product.save();
         }
 
-        // Create order
+        // Save shipping address to user's address book if authenticated
+        if (req.user?.id && shippingAddress) {
+            try {
+                const userRecord = await User.findById(req.user.id);
+                if (userRecord) {
+                    // Check if address already exists
+                    const addressExists = userRecord.addresses?.some(
+                        addr => JSON.stringify(addr) === JSON.stringify(shippingAddress)
+                    );
+
+                    if (!addressExists) {
+                        await User.findByIdAndUpdate(
+                            req.user.id,
+                            { $addToSet: { addresses: shippingAddress } },
+                            { new: true }
+                        );
+                    }
+                }
+            } catch (addressError) {
+                console.error('Failed to save address:', addressError);
+                // Don't fail the order creation if address saving fails
+            }
+        }
+
+        // Create order with default status 'Pending'
         const order = await Order.create({
             customer,
             user: user || req.user?.id, // Support both authenticated and unauthenticated requests
@@ -162,6 +185,7 @@ export const createOrder = async (req, res) => {
             shippingAddress,
             paymentMethod,
             notes,
+            status: 'Pending', // Explicitly set to Pending
             createdBy: req.user?.id,
         });
 
@@ -185,11 +209,8 @@ export const updateOrderStatus = async (req, res) => {
     try {
         const { status } = req.body;
 
-        const order = await Order.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true, runValidators: true }
-        );
+        // Find order first to check current status
+        const order = await Order.findById(req.params.id).populate('orderItems.product');
 
         if (!order) {
             return res.status(404).json({
@@ -197,6 +218,46 @@ export const updateOrderStatus = async (req, res) => {
                 message: 'Không tìm thấy đơn hàng',
             });
         }
+
+        const oldStatus = order.status;
+
+        // CRITICAL BUSINESS LOGIC: Deduct stock ONLY when status changes to 'Shipped'
+        if (status === 'Shipped' && oldStatus !== 'Shipped') {
+            // Validate stock availability before deducting
+            for (const item of order.orderItems) {
+                const product = await Product.findById(item.product);
+
+                if (!product) {
+                    return res.status(404).json({
+                        success: false,
+                        message: `Không tìm thấy sản phẩm: ${item.productName}`,
+                    });
+                }
+
+                // Check if there's enough stock
+                if (product.stock < item.quantity) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Sản phẩm "${product.name}" không đủ hàng để xuất kho. Còn lại: ${product.stock}, Cần: ${item.quantity}`,
+                    });
+                }
+            }
+
+            // All products have enough stock, proceed with deduction
+            for (const item of order.orderItems) {
+                await Product.findByIdAndUpdate(
+                    item.product,
+                    { $inc: { stock: -item.quantity } },
+                    { new: true }
+                );
+            }
+
+            console.log(`✅ Stock deducted for order ${order._id} when status changed to Shipped`);
+        }
+
+        // Update order status
+        order.status = status;
+        await order.save();
 
         res.status(200).json({
             success: true,

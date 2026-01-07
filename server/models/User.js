@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        addresses: {
+            type: [mongoose.Schema.Types.Mixed],
+            default: [],
+        },
         isActive: {
             type: Boolean,
             default: true,
