@@ -91,7 +91,7 @@ export default function HomePage() {
     const handleAddToCart = (product: any) => {
         if (product.stock > 0) {
             addToCart({
-                id: product.id,
+                id: product._id,
                 name: product.name,
                 price: product.price,
                 image: product.image_url,
@@ -232,10 +232,10 @@ export default function HomePage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {newProducts.map((product) => (
                                 <div
-                                    key={product.id}
+                                    key={product._id}
                                     className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition group"
                                 >
-                                    <Link to={`/product/${product.id}`} className="block">
+                                    <Link to={`/product/${product._id}`} className="block">
                                         <div className="relative h-48 bg-gray-200 overflow-hidden">
                                             {product.image_url ? (
                                                 <img
@@ -256,7 +256,7 @@ export default function HomePage() {
                                         </div>
                                     </Link>
                                     <div className="p-4">
-                                        <Link to={`/product/${product.id}`}>
+                                        <Link to={`/product/${product._id}`}>
                                             <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition min-h-[3rem]">
                                                 {product.name}
                                             </h3>

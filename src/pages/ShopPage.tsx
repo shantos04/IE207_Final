@@ -136,7 +136,7 @@ export default function ShopPage() {
     const handleAddToCart = (product: any) => {
         if (product.stock > 0) {
             addToCart({
-                id: product.id,
+                id: product._id,
                 name: product.name,
                 price: product.price,
                 image: product.image_url,
@@ -268,8 +268,8 @@ export default function ShopPage() {
                                                 <Star
                                                     key={i}
                                                     className={`w-4 h-4 ${i < rating
-                                                            ? 'text-yellow-400 fill-yellow-400'
-                                                            : 'text-gray-300'
+                                                        ? 'text-yellow-400 fill-yellow-400'
+                                                        : 'text-gray-300'
                                                         }`}
                                                 />
                                             ))}
@@ -356,10 +356,10 @@ export default function ShopPage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {currentProducts.map((product) => (
                                     <div
-                                        key={product.id}
+                                        key={product._id}
                                         className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition group"
                                     >
-                                        <Link to={`/product/${product.id}`} className="block">
+                                        <Link to={`/product/${product._id}`} className="block">
                                             <div className="relative h-48 bg-gray-200 overflow-hidden">
                                                 {product.image_url ? (
                                                     <img
@@ -380,7 +380,7 @@ export default function ShopPage() {
                                             </div>
                                         </Link>
                                         <div className="p-4">
-                                            <Link to={`/product/${product.id}`}>
+                                            <Link to={`/product/${product._id}`}>
                                                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition min-h-[3rem]">
                                                     {product.name}
                                                 </h3>
@@ -392,8 +392,8 @@ export default function ShopPage() {
                                                     <Star
                                                         key={i}
                                                         className={`w-4 h-4 ${i < 4
-                                                                ? 'text-yellow-400 fill-yellow-400'
-                                                                : 'text-gray-300'
+                                                            ? 'text-yellow-400 fill-yellow-400'
+                                                            : 'text-gray-300'
                                                             }`}
                                                     />
                                                 ))}
@@ -420,8 +420,8 @@ export default function ShopPage() {
                                                 onClick={() => handleAddToCart(product)}
                                                 disabled={product.stock === 0}
                                                 className={`w-full py-2 rounded-lg font-medium transition flex items-center justify-center space-x-2 ${product.stock > 0
-                                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                     }`}
                                             >
                                                 <ShoppingCart className="w-4 h-4" />
@@ -440,8 +440,8 @@ export default function ShopPage() {
                                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                             disabled={currentPage === 1}
                                             className={`p-2 rounded-lg border transition ${currentPage === 1
-                                                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <ChevronLeft className="w-5 h-5" />
@@ -460,8 +460,8 @@ export default function ShopPage() {
                                                         key={page}
                                                         onClick={() => setCurrentPage(page)}
                                                         className={`min-w-[40px] h-10 px-3 rounded-lg border transition ${currentPage === page
-                                                                ? 'bg-blue-600 text-white border-blue-600'
-                                                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                            ? 'bg-blue-600 text-white border-blue-600'
+                                                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                                                             }`}
                                                     >
                                                         {page}
@@ -481,8 +481,8 @@ export default function ShopPage() {
                                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                             disabled={currentPage === totalPages}
                                             className={`p-2 rounded-lg border transition ${currentPage === totalPages
-                                                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                                                 }`}
                                         >
                                             <ChevronRight className="w-5 h-5" />
