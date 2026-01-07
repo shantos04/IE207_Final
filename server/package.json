@@ -11,6 +11,7 @@
         "seed:products": "node seeders/products.seed.js",
         "seed:orders": "node seeders/orders.seed.js",
         "seed:settings": "node seeders/settings.seed.js",
+        "seed:users": "node seeders/users.seed.js",
         "seed:master": "node seeders/master.seed.js"
     },
     "keywords": [
