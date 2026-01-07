@@ -242,17 +242,12 @@ export const createOrder = async (req, res) => {
 // @route   PUT /api/orders/:id/status
 // @access  Private
 export const updateOrderStatus = async (req, res) => {
-    // Start a session for transaction to ensure data integrity
-    const session = await Order.startSession();
-    session.startTransaction();
-
     try {
         const { status } = req.body;
 
         // Validate status
         const validStatuses = ['Draft', 'Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
         if (!validStatuses.includes(status)) {
-            await session.abortTransaction();
             return res.status(400).json({
                 success: false,
                 message: `Trạng thái không hợp lệ. Phải là một trong: ${validStatuses.join(', ')}`,
@@ -260,10 +255,9 @@ export const updateOrderStatus = async (req, res) => {
         }
 
         // Find order first to check current status
-        const order = await Order.findById(req.params.id).session(session);
+        const order = await Order.findById(req.params.id);
 
         if (!order) {
-            await session.abortTransaction();
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy đơn hàng',
@@ -271,61 +265,70 @@ export const updateOrderStatus = async (req, res) => {
         }
 
         const oldStatus = order.status;
+        const newStatus = status;
 
         // CRITICAL BUSINESS LOGIC: Deduct stock ONLY when status changes to 'Shipped'
         // This ensures we only deduct once when order starts shipping
-        if (status === 'Shipped' && oldStatus !== 'Shipped') {
-            console.log(`🔄 [updateOrderStatus] Processing inventory deduction for order ${order._id}`);
-            console.log(`   Old Status: ${oldStatus} → New Status: ${status}`);
+        // IMPORTANT: Use for...of loop for proper async/await handling
+        if (newStatus === 'Shipped' && oldStatus !== 'Shipped' && oldStatus !== 'Delivered') {
+            console.log(`🔄 [updateOrderStatus] Bắt đầu trừ kho cho đơn hàng: ${order._id}`);
+            console.log(`   Trạng thái cũ: ${oldStatus} → Trạng thái mới: ${newStatus}`);
 
-            // Phase 1: Validate stock availability for ALL items first
-            const stockValidationErrors = [];
+            // Phase 1: Validate stock availability for ALL items first (Defensive Coding)
+            // KHÔNG dùng forEach với async/await - PHẢI dùng for...of
             for (const item of order.orderItems) {
-                const product = await Product.findById(item.product).session(session);
+                const product = await Product.findById(item.product);
 
+                // Check 1: Product existence (Null check)
                 if (!product) {
-                    stockValidationErrors.push(`Không tìm thấy sản phẩm: ${item.productName}`);
-                    continue;
+                    console.error(`❌ Không tìm thấy sản phẩm ID: ${item.product}`);
+                    return res.status(404).json({
+                        success: false,
+                        message: `Lỗi dữ liệu: Không tìm thấy sản phẩm có ID ${item.product}`,
+                    });
                 }
 
-                // Check if there's enough stock (using 'stock' field as per Product model)
+                // Check 2: Stock availability (Stock check)
                 if (product.stock < item.quantity) {
-                    stockValidationErrors.push(
-                        `Sản phẩm "${product.name}" không đủ hàng. Còn lại: ${product.stock}, Cần: ${item.quantity}`
-                    );
+                    console.error(`❌ Sản phẩm ${product.name} thiếu hàng: Kho=${product.stock}, Cần=${item.quantity}`);
+                    return res.status(400).json({
+                        success: false,
+                        message: `Sản phẩm "${product.name}" không đủ hàng (Kho: ${product.stock}, Đơn: ${item.quantity})`,
+                    });
                 }
             }
 
-            // If any validation errors, abort transaction
-            if (stockValidationErrors.length > 0) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                    success: false,
-                    message: 'Không đủ hàng để xuất kho',
-                    errors: stockValidationErrors,
-                });
-            }
-
-            // Phase 2: All products have enough stock, proceed with atomic deduction
+            // Phase 2: All products have enough stock, proceed with deduction
             for (const item of order.orderItems) {
-                const product = await Product.findByIdAndUpdate(
-                    item.product,
-                    { $inc: { stock: -item.quantity } }, // Atomic decrement
-                    { new: true, session } // Use session for transaction
-                );
+                const product = await Product.findById(item.product);
 
-                console.log(`   ✅ Deducted ${item.quantity} from ${product.name}. New stock: ${product.stock}`);
+                // Deduct stock
+                product.stock -= item.quantity;
+
+                // Optional: Track sold quantity
+                // product.sold = (product.sold || 0) + item.quantity;
+
+                await product.save();
+
+                console.log(`   ✅ Đã trừ ${item.quantity} từ ${product.name}. Tồn kho mới: ${product.stock}`);
             }
 
-            console.log(`✅ Stock deduction completed for order ${order._id}`);
+            console.log(`✅ Hoàn thành trừ kho cho đơn hàng ${order._id}`);
         }
 
         // Update order status
-        order.status = status;
-        await order.save({ session });
+        order.status = newStatus;
 
-        // Commit transaction
-        await session.commitTransaction();
+        // Update timestamp and payment status for Delivered orders
+        if (newStatus === 'Delivered') {
+            // Mark payment as paid for COD orders when delivered
+            if (order.paymentMethod === 'COD' && order.paymentStatus === 'unpaid') {
+                order.paymentStatus = 'paid';
+                console.log(`   💰 Đánh dấu đã thanh toán cho đơn COD: ${order.orderCode}`);
+            }
+        }
+
+        await order.save();
 
         // Populate order data for response
         await order.populate('orderItems.product', 'name productCode imageUrl stock');
@@ -333,19 +336,19 @@ export const updateOrderStatus = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'Cập nhật trạng thái thành công',
+            message: `Đã cập nhật trạng thái đơn hàng thành "${newStatus}"`,
             data: order,
         });
     } catch (error) {
-        // Rollback transaction on error
-        await session.abortTransaction();
-        console.error('❌ [updateOrderStatus] Error:', error.message);
-        res.status(500).json({
+        console.error('❌ [updateOrderStatus] Lỗi:', error.message);
+        console.error('Stack trace:', error.stack);
+
+        // Return appropriate error status
+        const statusCode = error.name === 'ValidationError' ? 400 : 500;
+        res.status(statusCode).json({
             success: false,
-            message: error.message,
+            message: error.message || 'Đã xảy ra lỗi khi cập nhật trạng thái đơn hàng',
         });
-    } finally {
-        session.endSession();
     }
 };
 
