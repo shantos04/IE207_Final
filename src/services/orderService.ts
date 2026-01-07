@@ -49,7 +49,7 @@ export interface OrderResponse {
 }
 
 export const orderService = {
-    // Lấy danh sách đơn hàng
+    // Lấy danh sách đơn hàng (admin)
     getOrders: async (params?: {
         page?: number;
         limit?: number;
@@ -57,6 +57,12 @@ export const orderService = {
         paymentStatus?: string;
     }) => {
         const response = await api.get<OrdersResponse>('/orders', { params });
+        return response.data;
+    },
+
+    // Lấy đơn hàng của tôi (user)
+    getMyOrders: async () => {
+        const response = await api.get<OrdersResponse>('/orders/myorders');
         return response.data;
     },
 

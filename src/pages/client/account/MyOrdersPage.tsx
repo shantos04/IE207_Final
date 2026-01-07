@@ -2,25 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Clock, Truck, CheckCircle, XCircle, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { orderService, Order as ServiceOrder } from '../../../services/orderService';
 
-interface Order {
-    _id: string;
-    orderNumber: string;
+// Extend the service Order type for display purposes
+interface Order extends Omit<ServiceOrder, 'orderItems'> {
+    orderNumber?: string; // Optional for backward compatibility
     orderItems: Array<{
-        product: {
-            _id: string;
-            name: string;
-            productCode: string;
-            imageUrl?: string;
-            price: number;
-        };
+        product: any; // Can be string (ID) or populated object
+        productName?: string;
+        productCode?: string;
         quantity: number;
         price: number;
     }>;
-    totalAmount: number;
-    status: string;
-    paymentStatus: string;
-    createdAt: string;
 }
 
 export default function MyOrdersPage() {
@@ -32,17 +25,33 @@ export default function MyOrdersPage() {
         fetchOrders();
     }, []);
 
+    // Filter orders based on selected filter
+    const filteredOrders = orders.filter((order) => {
+        if (filter === 'all') return true;
+        return order.status.toLowerCase() === filter.toLowerCase();
+    });
+
     const fetchOrders = async () => {
         try {
-            // TODO: Call API to get user's orders
-            // const response = await orderService.getMyOrders();
-            // setOrders(response.data);
+            setIsLoading(true);
+            console.log('🔍 Fetching orders for user...');
+            console.log('📦 Token:', localStorage.getItem('accessToken')?.substring(0, 20) + '...');
 
-            // Mock data for now
+            const response = await orderService.getMyOrders();
+            console.log('✅ Orders fetched:', response);
+
+            if (response.success && response.data) {
+                setOrders(response.data);
+                toast.success(`Đã tải ${response.data.length} đơn hàng`);
+            } else {
+                setOrders([]);
+            }
+        } catch (error: any) {
+            console.error('❌ Error fetching orders:', error);
+            console.error('Error response:', error.response?.data);
+            toast.error(error.response?.data?.message || 'Không thể tải danh sách đơn hàng');
             setOrders([]);
-            setIsLoading(false);
-        } catch (error) {
-            toast.error('Không thể tải danh sách đơn hàng');
+        } finally {
             setIsLoading(false);
         }
     };
@@ -146,14 +155,17 @@ export default function MyOrdersPage() {
             </div>
 
             {/* Orders List */}
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
                 <div className="text-center py-20">
                     <Package className="w-20 h-20 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        Chưa có đơn hàng nào
+                        {filter === 'all' ? 'Chưa có đơn hàng nào' : `Không có đơn hàng ${getStatusText(filter).toLowerCase()}`}
                     </h3>
                     <p className="text-gray-600 mb-6">
-                        Bạn chưa có đơn hàng nào. Hãy khám phá các sản phẩm của chúng tôi!
+                        {filter === 'all'
+                            ? 'Bạn chưa có đơn hàng nào. Hãy khám phá các sản phẩm của chúng tôi!'
+                            : 'Thử chọn bộ lọc khác hoặc khám phá sản phẩm mới!'
+                        }
                     </p>
                     <Link
                         to="/shop"
@@ -164,7 +176,7 @@ export default function MyOrdersPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {orders.map((order) => (
+                    {filteredOrders.map((order) => (
                         <div
                             key={order._id}
                             className="border border-gray-200 rounded-lg hover:shadow-md transition"
@@ -176,7 +188,7 @@ export default function MyOrdersPage() {
                                         <div>
                                             <span className="text-sm text-gray-600">Mã đơn hàng:</span>
                                             <p className="font-semibold text-gray-900">
-                                                {order.orderNumber}
+                                                {order.orderCode || order.orderNumber}
                                             </p>
                                         </div>
                                         <div>
@@ -201,48 +213,60 @@ export default function MyOrdersPage() {
                             {/* Order Items */}
                             <div className="p-6">
                                 <div className="space-y-4">
-                                    {order.orderItems.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center space-x-4 pb-4 border-b border-gray-100 last:border-0"
-                                        >
-                                            <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                                {item.product.imageUrl ? (
-                                                    <img
-                                                        src={item.product.imageUrl}
-                                                        alt={item.product.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center">
-                                                        <Package className="w-8 h-8 text-gray-400" />
-                                                    </div>
-                                                )}
+                                    {order.orderItems.map((item, index) => {
+                                        // Handle both populated and non-populated product
+                                        const productName = item.product?.name || item.productName || 'Sản phẩm';
+                                        const productCode = item.product?.productCode || item.productCode || 'N/A';
+                                        const productId = item.product?._id || item.product;
+                                        const imageUrl = item.product?.imageUrl;
+
+                                        return (
+                                            <div
+                                                key={index}
+                                                className="flex items-center space-x-4 pb-4 border-b border-gray-100 last:border-0"
+                                            >
+                                                <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                                    {imageUrl ? (
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={productName}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <Package className="w-8 h-8 text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    {productId && typeof productId === 'string' ? (
+                                                        <Link
+                                                            to={`/product/${productId}`}
+                                                            className="font-semibold text-gray-900 hover:text-blue-600 transition"
+                                                        >
+                                                            {productName}
+                                                        </Link>
+                                                    ) : (
+                                                        <p className="font-semibold text-gray-900">{productName}</p>
+                                                    )}
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        Mã SP: {productCode}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600">
+                                                        Số lượng: x{item.quantity}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold text-lg text-gray-900">
+                                                        {new Intl.NumberFormat('vi-VN', {
+                                                            style: 'currency',
+                                                            currency: 'VND',
+                                                        }).format(item.price * item.quantity)}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <Link
-                                                    to={`/product/${item.product._id}`}
-                                                    className="font-semibold text-gray-900 hover:text-blue-600 transition"
-                                                >
-                                                    {item.product.name}
-                                                </Link>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    Mã SP: {item.product.productCode}
-                                                </p>
-                                                <p className="text-sm text-gray-600">
-                                                    Số lượng: x{item.quantity}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-lg text-gray-900">
-                                                    {new Intl.NumberFormat('vi-VN', {
-                                                        style: 'currency',
-                                                        currency: 'VND',
-                                                    }).format(item.price * item.quantity)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
 
                                 {/* Order Footer */}
@@ -257,7 +281,7 @@ export default function MyOrdersPage() {
                                             {new Intl.NumberFormat('vi-VN', {
                                                 style: 'currency',
                                                 currency: 'VND',
-                                            }).format(order.totalAmount)}
+                                            }).format(order.totalPrice || order.totalAmount)}
                                         </p>
                                     </div>
                                 </div>
