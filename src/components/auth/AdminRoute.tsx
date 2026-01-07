@@ -12,6 +12,18 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     const location = useLocation();
     const [hasShownToast, setHasShownToast] = useState(false);
 
+    // Check authorization BEFORE useEffect (must be done after hooks)
+    const authorizedRoles = ['admin', 'manager', 'staff'];
+    const isAuthorized = user ? authorizedRoles.includes(user.role) : false;
+
+    // IMPORTANT: All hooks must be called before any conditional returns
+    useEffect(() => {
+        if (!isAuthorized && !hasShownToast && isAuthenticated && user) {
+            toast.error('Bạn không có quyền truy cập trang quản trị!');
+            setHasShownToast(true);
+        }
+    }, [isAuthorized, hasShownToast, isAuthenticated, user]);
+
     // Show loading state while checking authentication
     if (isLoading) {
         return (
@@ -31,16 +43,6 @@ export default function AdminRoute({ children }: AdminRouteProps) {
     }
 
     // Check 2: Is user authorized (Admin/Manager/Staff)?
-    const authorizedRoles = ['admin', 'manager', 'staff'];
-    const isAuthorized = authorizedRoles.includes(user.role);
-
-    useEffect(() => {
-        if (!isAuthorized && !hasShownToast) {
-            toast.error('Bạn không có quyền truy cập trang quản trị!');
-            setHasShownToast(true);
-        }
-    }, [isAuthorized, hasShownToast]);
-
     if (!isAuthorized) {
         // User is authenticated but NOT authorized (e.g., customer)
         // Redirect to home page

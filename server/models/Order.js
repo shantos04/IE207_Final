@@ -101,6 +101,12 @@ const orderSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+        deliveredAt: {
+            type: Date,
+        },
+        paidAt: {
+            type: Date,
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

@@ -56,6 +56,49 @@ export default function MyOrdersPage() {
         }
     };
 
+    const handleCancelOrder = async (orderId: string, orderCode: string) => {
+        const confirmed = window.confirm(
+            `Bạn có chắc chắn muốn hủy đơn hàng ${orderCode}?\n\nHành động này không thể hoàn tác.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const response = await orderService.cancelOrder(orderId);
+            if (response.success) {
+                toast.success('Đã hủy đơn hàng thành công');
+                // Refresh orders
+                fetchOrders();
+            }
+        } catch (error: any) {
+            console.error('❌ Error canceling order:', error);
+            toast.error(error.response?.data?.message || 'Không thể hủy đơn hàng');
+        }
+    };
+
+    const handleConfirmReceived = async (orderId: string, orderCode: string) => {
+        const confirmed = window.confirm(
+            `Xác nhận bạn đã nhận được hàng cho đơn ${orderCode}?\n\nSau khi xác nhận, đơn hàng sẽ được đánh dấu là đã giao.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            const response = await orderService.confirmReceived(orderId);
+            if (response.success) {
+                toast.success('🎉 Đã xác nhận nhận hàng thành công!', {
+                    duration: 4000,
+                    icon: '✅',
+                });
+                // Refresh orders
+                fetchOrders();
+            }
+        } catch (error: any) {
+            console.error('❌ Error confirming received:', error);
+            toast.error(error.response?.data?.message || 'Không thể xác nhận đơn hàng');
+        }
+    };
+
     const getStatusIcon = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending':
@@ -270,12 +313,9 @@ export default function MyOrdersPage() {
                                 </div>
 
                                 {/* Order Footer */}
-                                <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-                                    <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
-                                        <Eye className="w-5 h-5" />
-                                        <span>Xem chi tiết</span>
-                                    </button>
-                                    <div className="text-right">
+                                <div className="mt-6 pt-6 border-t border-gray-200">
+                                    {/* Total Amount */}
+                                    <div className="flex justify-between items-center mb-4">
                                         <span className="text-sm text-gray-600">Tổng tiền:</span>
                                         <p className="text-2xl font-bold text-red-600">
                                             {new Intl.NumberFormat('vi-VN', {
@@ -283,6 +323,37 @@ export default function MyOrdersPage() {
                                                 currency: 'VND',
                                             }).format(order.totalPrice || order.totalAmount)}
                                         </p>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-col sm:flex-row justify-end gap-3">
+                                        {/* Cancel Button - Only for Pending/Confirmed */}
+                                        {['Pending', 'Confirmed'].includes(order.status) && (
+                                            <button
+                                                onClick={() => handleCancelOrder(order._id, order.orderCode)}
+                                                className="px-6 py-2.5 rounded-lg border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all font-medium flex items-center justify-center gap-2"
+                                            >
+                                                <XCircle className="w-5 h-5" />
+                                                Hủy đơn hàng
+                                            </button>
+                                        )}
+
+                                        {/* Confirm Received Button - Only for Shipped */}
+                                        {order.status === 'Shipped' && (
+                                            <button
+                                                onClick={() => handleConfirmReceived(order._id, order.orderCode)}
+                                                className="px-6 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200 transition-all font-medium flex items-center justify-center gap-2"
+                                            >
+                                                <CheckCircle className="w-5 h-5" />
+                                                Đã nhận được hàng
+                                            </button>
+                                        )}
+
+                                        {/* View Detail Button - Always visible */}
+                                        <button className="px-6 py-2.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors font-medium flex items-center justify-center gap-2">
+                                            <Eye className="w-5 h-5" />
+                                            <span>Xem chi tiết</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>

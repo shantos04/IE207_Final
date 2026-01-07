@@ -6,6 +6,8 @@ import {
     updateOrderStatus,
     updatePaymentStatus,
     cancelOrder,
+    cancelMyOrder,
+    confirmReceived,
     getMyOrders,
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
@@ -21,11 +23,15 @@ router.route('/').get(getOrders).post(protect, createOrder);
 // IMPORTANT: Route này phải đặt TRƯỚC /:id để tránh conflict
 router.route('/myorders').get(protect, getMyOrders);
 
+// Customer actions - must be authenticated
+router.put('/:id/cancel', protect, cancelMyOrder);
+router.put('/:id/received', protect, confirmReceived);
+
 router.route('/:id').get(getOrder);
 
 // Protected routes - bỏ comment khi cần bảo vệ
 router.put('/:id/status', /* authorize('admin', 'manager'), */ updateOrderStatus);
 router.put('/:id/payment', /* authorize('admin', 'manager'), */ updatePaymentStatus);
-router.put('/:id/cancel', cancelOrder);
+router.put('/:id/cancel-admin', /* authorize('admin', 'manager'), */ cancelOrder);
 
 export default router;

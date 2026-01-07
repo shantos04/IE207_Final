@@ -95,4 +95,10 @@ export const orderService = {
         const response = await api.put<OrderResponse>(`/orders/${id}/cancel`);
         return response.data;
     },
+
+    // Xác nhận đã nhận hàng
+    confirmReceived: async (id: string) => {
+        const response = await api.put<OrderResponse>(`/orders/${id}/received`);
+        return response.data;
+    },
 };

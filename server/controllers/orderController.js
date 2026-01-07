@@ -146,10 +146,11 @@ export const createOrder = async (req, res) => {
         // 1. Generate Order Code (backup if model pre-save hook fails)
         const orderCode = `ORD-${Date.now()}`;
 
-        // 2. Validate and populate product details (NO STOCK DEDUCTION HERE)
+        // 2. Validate and populate product details + DEDUCT STOCK IMMEDIATELY (Reserve Stock)
         const processedOrderItems = [];
         let calculatedTotal = 0;
 
+        // Phase 1: Validate ALL products first
         for (const item of orderItems) {
             const product = await Product.findById(item.product);
 
@@ -160,14 +161,24 @@ export const createOrder = async (req, res) => {
                 });
             }
 
-            // Note: We check stock but DON'T deduct it yet
-            // Stock will be deducted when order status changes to 'Shipped'
+            // NEW LOGIC: Check stock availability before creating order
             if (product.stock < item.quantity) {
                 return res.status(400).json({
                     success: false,
-                    message: `Sản phẩm ${product.name} hiện tại không đủ hàng (còn ${product.stock})`,
+                    message: `Sản phẩm "${product.name}" đã hết hàng (Còn: ${product.stock}, Cần: ${item.quantity})`,
                 });
             }
+        }
+
+        // Phase 2: All products available, now deduct stock and build order items
+        for (const item of orderItems) {
+            const product = await Product.findById(item.product);
+
+            // NEW LOGIC: Deduct stock immediately when order is created (Reserve stock)
+            product.stock -= item.quantity;
+            await product.save();
+
+            console.log(`📦 [createOrder] Đã trừ ${item.quantity} từ ${product.name}. Tồn kho mới: ${product.stock}`);
 
             // 3. Calculate subtotal for each item (Security: use actual DB price)
             const subtotal = product.price * item.quantity;
@@ -267,54 +278,8 @@ export const updateOrderStatus = async (req, res) => {
         const oldStatus = order.status;
         const newStatus = status;
 
-        // CRITICAL BUSINESS LOGIC: Deduct stock ONLY when status changes to 'Shipped'
-        // This ensures we only deduct once when order starts shipping
-        // IMPORTANT: Use for...of loop for proper async/await handling
-        if (newStatus === 'Shipped' && oldStatus !== 'Shipped' && oldStatus !== 'Delivered') {
-            console.log(`🔄 [updateOrderStatus] Bắt đầu trừ kho cho đơn hàng: ${order._id}`);
-            console.log(`   Trạng thái cũ: ${oldStatus} → Trạng thái mới: ${newStatus}`);
-
-            // Phase 1: Validate stock availability for ALL items first (Defensive Coding)
-            // KHÔNG dùng forEach với async/await - PHẢI dùng for...of
-            for (const item of order.orderItems) {
-                const product = await Product.findById(item.product);
-
-                // Check 1: Product existence (Null check)
-                if (!product) {
-                    console.error(`❌ Không tìm thấy sản phẩm ID: ${item.product}`);
-                    return res.status(404).json({
-                        success: false,
-                        message: `Lỗi dữ liệu: Không tìm thấy sản phẩm có ID ${item.product}`,
-                    });
-                }
-
-                // Check 2: Stock availability (Stock check)
-                if (product.stock < item.quantity) {
-                    console.error(`❌ Sản phẩm ${product.name} thiếu hàng: Kho=${product.stock}, Cần=${item.quantity}`);
-                    return res.status(400).json({
-                        success: false,
-                        message: `Sản phẩm "${product.name}" không đủ hàng (Kho: ${product.stock}, Đơn: ${item.quantity})`,
-                    });
-                }
-            }
-
-            // Phase 2: All products have enough stock, proceed with deduction
-            for (const item of order.orderItems) {
-                const product = await Product.findById(item.product);
-
-                // Deduct stock
-                product.stock -= item.quantity;
-
-                // Optional: Track sold quantity
-                // product.sold = (product.sold || 0) + item.quantity;
-
-                await product.save();
-
-                console.log(`   ✅ Đã trừ ${item.quantity} từ ${product.name}. Tồn kho mới: ${product.stock}`);
-            }
-
-            console.log(`✅ Hoàn thành trừ kho cho đơn hàng ${order._id}`);
-        }
+        // REMOVED: Stock deduction logic (now handled in createOrder)
+        // Stock is already deducted when order is created, no need to deduct again
 
         // Update order status
         order.status = newStatus;
@@ -385,9 +350,129 @@ export const updatePaymentStatus = async (req, res) => {
     }
 };
 
-// @desc    Cancel order
+// @desc    Cancel my order (Customer)
 // @route   PUT /api/orders/:id/cancel
 // @access  Private
+export const cancelMyOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy đơn hàng',
+            });
+        }
+
+        // Security Check: Only order owner can cancel
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Bạn không có quyền hủy đơn hàng này',
+            });
+        }
+
+        // Status Check: Can only cancel if not shipped/delivered/cancelled
+        if (['Shipped', 'Delivered', 'Cancelled'].includes(order.status)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không thể hủy đơn hàng đang giao hoặc đã hoàn tất',
+            });
+        }
+
+        // NEW LOGIC: Restore stock when customer cancels order
+        console.log(`🔄 [cancelMyOrder] Hoàn trả kho cho đơn hàng: ${order.orderCode}`);
+        for (const item of order.orderItems) {
+            const product = await Product.findById(item.product);
+            if (product) {
+                product.stock += item.quantity;
+                await product.save();
+                console.log(`   ✅ Đã hoàn ${item.quantity} cho ${product.name}. Tồn kho mới: ${product.stock}`);
+            }
+        }
+
+        // Update status to Cancelled
+        order.status = 'Cancelled';
+        await order.save();
+
+        console.log(`❌ Đơn hàng ${order.orderCode} đã bị hủy bởi khách hàng`);
+
+        res.status(200).json({
+            success: true,
+            message: 'Hủy đơn hàng thành công',
+            data: order,
+        });
+    } catch (error) {
+        console.error('❌ [cancelMyOrder] Lỗi:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Đã xảy ra lỗi khi hủy đơn hàng',
+        });
+    }
+};
+
+// @desc    Confirm order received (Customer)
+// @route   PUT /api/orders/:id/received
+// @access  Private
+export const confirmReceived = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy đơn hàng',
+            });
+        }
+
+        // Security Check: Only order owner can confirm
+        if (order.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Bạn không có quyền xác nhận đơn hàng này',
+            });
+        }
+
+        // Status Check: Can only confirm when order is being shipped
+        if (order.status !== 'Shipped') {
+            return res.status(400).json({
+                success: false,
+                message: 'Chỉ có thể xác nhận đơn hàng đang được giao',
+            });
+        }
+
+        // Update order status to Delivered
+        order.status = 'Delivered';
+        order.deliveredAt = Date.now();
+
+        // Mark as paid for COD orders (assume payment completed on delivery)
+        if (order.paymentMethod === 'COD' && order.paymentStatus === 'unpaid') {
+            order.paymentStatus = 'paid';
+            order.paidAt = Date.now();
+            console.log(`💰 Đơn COD ${order.orderCode} đã được thanh toán khi giao hàng`);
+        }
+
+        await order.save();
+
+        console.log(`✅ Khách hàng đã xác nhận nhận hàng: ${order.orderCode}`);
+
+        res.status(200).json({
+            success: true,
+            message: 'Xác nhận đã nhận hàng thành công',
+            data: order,
+        });
+    } catch (error) {
+        console.error('❌ [confirmReceived] Lỗi:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Đã xảy ra lỗi khi xác nhận đơn hàng',
+        });
+    }
+};
+
+// @desc    Cancel order (Admin)
+// @route   PUT /api/orders/:id/cancel-admin
+// @access  Private/Admin
 export const cancelOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
