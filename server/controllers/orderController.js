@@ -124,6 +124,14 @@ export const createOrder = async (req, res) => {
         // Debug: Check if user is authenticated
         console.log('🔍 [createOrder] User request:', req.user);
 
+        // Defensive check: Ensure user is authenticated
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({
+                success: false,
+                message: 'Lỗi xác thực: Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.',
+            });
+        }
+
         const { customer, orderItems, shippingAddress, paymentMethod, notes, totalAmount } = req.body;
 
         // Validate orderItems
