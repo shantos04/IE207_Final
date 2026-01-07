@@ -7,7 +7,8 @@ import User from '../models/User.js';
 // @access  Private
 export const getMyOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user.id })
+        // Fix: Use req.user._id for proper MongoDB ObjectId query
+        const orders = await Order.find({ user: req.user._id })
             .populate('orderItems.product', 'name productCode imageUrl price')
             .sort({ createdAt: -1 });
 
@@ -187,9 +188,9 @@ export const createOrder = async (req, res) => {
         const finalTotalAmount = totalAmount || calculatedTotal;
 
         // 5. Save shipping address to user's address book if authenticated
-        if (req.user?.id && shippingAddress) {
+        if (req.user?._id && shippingAddress) {
             try {
-                const userRecord = await User.findById(req.user.id);
+                const userRecord = await User.findById(req.user._id);
                 if (userRecord) {
                     // Check if address already exists
                     const addressExists = userRecord.addresses?.some(
@@ -198,7 +199,7 @@ export const createOrder = async (req, res) => {
 
                     if (!addressExists) {
                         await User.findByIdAndUpdate(
-                            req.user.id,
+                            req.user._id,
                             { $addToSet: { addresses: shippingAddress } },
                             { new: true }
                         );
@@ -221,7 +222,7 @@ export const createOrder = async (req, res) => {
             totalAmount: finalTotalAmount, // Fix: Provide totalAmount
             notes,
             status: 'Pending', // Explicitly set to Pending
-            createdBy: req.user.id,
+            createdBy: req.user._id, // Fix: Use _id for consistency
         });
 
         res.status(201).json({
@@ -241,13 +242,28 @@ export const createOrder = async (req, res) => {
 // @route   PUT /api/orders/:id/status
 // @access  Private
 export const updateOrderStatus = async (req, res) => {
+    // Start a session for transaction to ensure data integrity
+    const session = await Order.startSession();
+    session.startTransaction();
+
     try {
         const { status } = req.body;
 
+        // Validate status
+        const validStatuses = ['Draft', 'Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+        if (!validStatuses.includes(status)) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: `Trạng thái không hợp lệ. Phải là một trong: ${validStatuses.join(', ')}`,
+            });
+        }
+
         // Find order first to check current status
-        const order = await Order.findById(req.params.id).populate('orderItems.product');
+        const order = await Order.findById(req.params.id).session(session);
 
         if (!order) {
+            await session.abortTransaction();
             return res.status(404).json({
                 success: false,
                 message: 'Không tìm thấy đơn hàng',
@@ -257,42 +273,63 @@ export const updateOrderStatus = async (req, res) => {
         const oldStatus = order.status;
 
         // CRITICAL BUSINESS LOGIC: Deduct stock ONLY when status changes to 'Shipped'
+        // This ensures we only deduct once when order starts shipping
         if (status === 'Shipped' && oldStatus !== 'Shipped') {
-            // Validate stock availability before deducting
+            console.log(`🔄 [updateOrderStatus] Processing inventory deduction for order ${order._id}`);
+            console.log(`   Old Status: ${oldStatus} → New Status: ${status}`);
+
+            // Phase 1: Validate stock availability for ALL items first
+            const stockValidationErrors = [];
             for (const item of order.orderItems) {
-                const product = await Product.findById(item.product);
+                const product = await Product.findById(item.product).session(session);
 
                 if (!product) {
-                    return res.status(404).json({
-                        success: false,
-                        message: `Không tìm thấy sản phẩm: ${item.productName}`,
-                    });
+                    stockValidationErrors.push(`Không tìm thấy sản phẩm: ${item.productName}`);
+                    continue;
                 }
 
-                // Check if there's enough stock
+                // Check if there's enough stock (using 'stock' field as per Product model)
                 if (product.stock < item.quantity) {
-                    return res.status(400).json({
-                        success: false,
-                        message: `Sản phẩm "${product.name}" không đủ hàng để xuất kho. Còn lại: ${product.stock}, Cần: ${item.quantity}`,
-                    });
+                    stockValidationErrors.push(
+                        `Sản phẩm "${product.name}" không đủ hàng. Còn lại: ${product.stock}, Cần: ${item.quantity}`
+                    );
                 }
             }
 
-            // All products have enough stock, proceed with deduction
-            for (const item of order.orderItems) {
-                await Product.findByIdAndUpdate(
-                    item.product,
-                    { $inc: { stock: -item.quantity } },
-                    { new: true }
-                );
+            // If any validation errors, abort transaction
+            if (stockValidationErrors.length > 0) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                    success: false,
+                    message: 'Không đủ hàng để xuất kho',
+                    errors: stockValidationErrors,
+                });
             }
 
-            console.log(`✅ Stock deducted for order ${order._id} when status changed to Shipped`);
+            // Phase 2: All products have enough stock, proceed with atomic deduction
+            for (const item of order.orderItems) {
+                const product = await Product.findByIdAndUpdate(
+                    item.product,
+                    { $inc: { stock: -item.quantity } }, // Atomic decrement
+                    { new: true, session } // Use session for transaction
+                );
+
+                console.log(`   ✅ Deducted ${item.quantity} from ${product.name}. New stock: ${product.stock}`);
+            }
+
+            console.log(`✅ Stock deduction completed for order ${order._id}`);
         }
 
         // Update order status
         order.status = status;
-        await order.save();
+        await order.save({ session });
+
+        // Commit transaction
+        await session.commitTransaction();
+
+        // Populate order data for response
+        await order.populate('orderItems.product', 'name productCode imageUrl stock');
+        await order.populate('user', 'fullName email');
 
         res.status(200).json({
             success: true,
@@ -300,10 +337,15 @@ export const updateOrderStatus = async (req, res) => {
             data: order,
         });
     } catch (error) {
+        // Rollback transaction on error
+        await session.abortTransaction();
+        console.error('❌ [updateOrderStatus] Error:', error.message);
         res.status(500).json({
             success: false,
             message: error.message,
         });
+    } finally {
+        session.endSession();
     }
 };
 
