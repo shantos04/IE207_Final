@@ -26,7 +26,7 @@ export interface Order {
     paymentMethod: string;
     totalAmount: number;
     totalPrice: number;
-    status: 'Draft' | 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
+    status: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
     paymentStatus: 'unpaid' | 'paid' | 'refunded';
     notes?: string;
     createdAt: string;
@@ -99,6 +99,24 @@ export const orderService = {
     // Xác nhận đã nhận hàng
     confirmReceived: async (id: string) => {
         const response = await api.put<OrderResponse>(`/orders/${id}/received`);
+        return response.data;
+    },
+
+    // Lấy thống kê đơn hàng (Admin only)
+    getOrderStats: async () => {
+        const response = await api.get<{
+            success: boolean;
+            data: {
+                pending: number;
+                confirmed: number;
+                shipped: number;
+                delivered: number;
+                cancelled: number;
+                todayOrders: number;
+                todayRevenue: number;
+                totalOrders: number;
+            };
+        }>('/orders/stats');
         return response.data;
     },
 };

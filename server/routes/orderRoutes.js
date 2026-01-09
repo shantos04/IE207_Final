@@ -9,6 +9,7 @@ import {
     cancelMyOrder,
     confirmReceived,
     getMyOrders,
+    getOrderStats,
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -22,6 +23,9 @@ router.route('/').get(getOrders).post(protect, createOrder);
 
 // IMPORTANT: Route này phải đặt TRƯỚC /:id để tránh conflict
 router.route('/myorders').get(protect, getMyOrders);
+
+// Statistics endpoint - Admin only (Tạm bỏ protect để test)
+router.get('/stats', /* protect, authorize(['admin']), */ getOrderStats);
 
 // Customer actions - must be authenticated
 router.put('/:id/cancel', protect, cancelMyOrder);

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Order Stats API</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        pre {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .success {
+            color: #4ec9b0;
+        }
+
+        .error {
+            color: #f48771;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Order Stats API Test</h1>
+    <button onclick="testAPI()">Fetch Stats</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/orders/stats');
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <pre class="success">
+✅ API SUCCESS!
+
+Stats Data:
+===========
+pending: ${data.data.pending}
+confirmed: ${data.data.confirmed}
+shipped: ${data.data.shipped}
+delivered: ${data.data.delivered}
+cancelled: ${data.data.cancelled}
+todayOrders: ${data.data.todayOrders}
+todayRevenue: ${data.data.todayRevenue.toLocaleString('vi-VN')} VND
+totalOrders: ${data.data.totalOrders}
+                        </pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<pre class="error">❌ API Error: ${data.message}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<pre class="error">❌ Request Failed: ${error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

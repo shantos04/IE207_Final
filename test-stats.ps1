@@ -1,0 +1,10 @@
+$stats = Invoke-RestMethod -Uri "http://localhost:5000/api/orders/stats" -Method GET
+Write-Host "SUCCESS: API returned data"
+Write-Host "pending: $($stats.data.pending)"
+Write-Host "confirmed: $($stats.data.confirmed)"
+Write-Host "shipped: $($stats.data.shipped)"
+Write-Host "delivered: $($stats.data.delivered)"
+Write-Host "cancelled: $($stats.data.cancelled)"
+Write-Host "todayOrders: $($stats.data.todayOrders)"
+Write-Host "todayRevenue: $($stats.data.todayRevenue)"
+Write-Host "totalOrders: $($stats.data.totalOrders)"

@@ -257,7 +257,7 @@ export const updateOrderStatus = async (req, res) => {
         const { status } = req.body;
 
         // Validate status
-        const validStatuses = ['Draft', 'Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+        const validStatuses = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
@@ -512,6 +512,95 @@ export const cancelOrder = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message,
+        });
+    }
+};
+
+// @desc    Get order statistics (for dashboard)
+// @route   GET /api/orders/stats
+// @access  Private/Admin
+export const getOrderStats = async (req, res) => {
+    try {
+        // 1. Count orders by status (All time)
+        const statusStats = await Order.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // --- DEBUG LOG: Xem terminal server để biết DB đang lưu chữ gì ---
+        console.log('>>> RAW STATS FROM DB:', JSON.stringify(statusStats, null, 2));
+
+        // 2. Helper function để tìm số lượng bất chấp hoa thường và ngôn ngữ
+        const getCount = (patterns) => {
+            return statusStats.reduce((acc, curr) => {
+                // Normalize status từ DB
+                const statusDB = String(curr._id || '').toLowerCase().trim();
+                // Check xem có trùng với bất kỳ pattern nào không
+                const isMatch = patterns.some(p => statusDB === p.toLowerCase().trim());
+                return isMatch ? acc + curr.count : acc;
+            }, 0);
+        };
+
+        // 3. Count today's orders and calculate today's revenue
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const todayStats = await Order.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: startOfDay }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    todayCount: { $sum: 1 },
+                    todayRevenue: { $sum: '$totalAmount' }
+                }
+            }
+        ]);
+
+        // 4. Format data for frontend - Mapping linh hoạt (Bao trọn các trường hợp)
+        const stats = {
+            // Gom cả 'pending', 'chờ xử lý', 'draft' vào nhóm chờ xử lý
+            pending: getCount(['Pending', 'pending', 'Chờ xử lý', 'Draft', 'Nháp']),
+
+            // Confirmed
+            confirmed: getCount(['Confirmed', 'confirmed', 'Đã xác nhận']),
+
+            // Gom 'shipped', 'đang giao' vào nhóm đang giao
+            shipped: getCount(['Shipped', 'shipped', 'Đang giao', 'Đang giao hàng', 'shipping']),
+
+            // Gom 'delivered'
+            delivered: getCount(['Delivered', 'delivered', 'Đã giao', 'Đã giao thành công', 'Hoàn thành']),
+
+            // Gom 'cancelled'
+            cancelled: getCount(['Cancelled', 'cancelled', 'Đã hủy', 'canceled']),
+
+            // Today's stats
+            todayOrders: todayStats[0]?.todayCount || 0,
+            todayRevenue: todayStats[0]?.todayRevenue || 0,
+
+            // Total orders (all time)
+            totalOrders: statusStats.reduce((sum, s) => sum + s.count, 0)
+        };
+
+        console.log('>>> PROCESSED STATS:', JSON.stringify(stats, null, 2));
+
+        res.status(200).json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        console.error('Error in getOrderStats:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Lỗi khi lấy thống kê đơn hàng',
+            error: error.message
         });
     }
 };

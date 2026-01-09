@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 
 // Status mapping
 const STATUS_MAP: Record<Order['status'], string> = {
-    'Draft': 'Nháp',
     'Pending': 'Chờ xử lý',
     'Confirmed': 'Đã xác nhận',
     'Shipped': 'Đang giao hàng',
@@ -19,14 +18,14 @@ const STATUS_MAP: Record<Order['status'], string> = {
 // Status badge styles
 const getStatusBadge = (status: Order['status']) => {
     const styles: Record<Order['status'], string> = {
-        'Draft': 'bg-gray-100 text-gray-700',
         'Pending': 'bg-yellow-100 text-yellow-700',
         'Confirmed': 'bg-blue-100 text-blue-700',
         'Shipped': 'bg-purple-100 text-purple-700',
         'Delivered': 'bg-green-100 text-green-700',
         'Cancelled': 'bg-red-100 text-red-700'
     };
-    return styles[status] || styles['Draft'];
+    // Fallback for old 'Draft' orders - treat as 'Pending'
+    return styles[status] || styles['Pending'];
 };
 
 interface Stats {
@@ -72,6 +71,7 @@ export default function OrdersPage() {
 
     useEffect(() => {
         fetchOrders();
+        fetchStats();
     }, [currentPage, statusFilter, startDate, endDate]);
 
     const fetchOrders = async () => {
@@ -91,7 +91,6 @@ export default function OrdersPage() {
             if (response.success) {
                 setOrders(response.data);
                 setTotalPages(response.pagination.pages);
-                calculateStats(response.data);
             }
         } catch (err: any) {
             console.error('Error fetching orders:', err);
@@ -101,18 +100,20 @@ export default function OrdersPage() {
         }
     };
 
-    const calculateStats = (orderData: Order[]) => {
-        const today = new Date().toDateString();
-        const todayOrders = orderData.filter(o =>
-            new Date(o.createdAt).toDateString() === today
-        );
-
-        setStats({
-            todayOrders: todayOrders.length,
-            pendingOrders: orderData.filter(o => o.status === 'Pending').length,
-            shippingOrders: orderData.filter(o => o.status === 'Shipped').length,
-            todayRevenue: todayOrders.reduce((sum, o) => sum + (o.totalPrice || o.totalAmount), 0)
-        });
+    const fetchStats = async () => {
+        try {
+            const response = await orderService.getOrderStats();
+            if (response.success) {
+                setStats({
+                    todayOrders: response.data.todayOrders,
+                    pendingOrders: response.data.pending,
+                    shippingOrders: response.data.shipped,
+                    todayRevenue: response.data.todayRevenue
+                });
+            }
+        } catch (err: any) {
+            console.error('Error fetching stats:', err);
+        }
     };
 
     const handleQuickDateFilter = (type: 'today' | 'week' | 'month') => {
@@ -161,6 +162,7 @@ export default function OrdersPage() {
             toast.success('Đã cập nhật trạng thái đơn hàng');
             closeStatusModal();
             fetchOrders();
+            fetchStats(); // Refresh stats after updating order
         } catch (err: any) {
             toast.error(err.response?.data?.message || 'Không thể cập nhật trạng thái');
         }
@@ -245,7 +247,7 @@ export default function OrdersPage() {
                 </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - Lấy dữ liệu từ API độc lập, KHÔNG bị ảnh hưởng bởi filter */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
@@ -516,7 +518,8 @@ export default function OrdersPage() {
                                             {/* Status Badge */}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(order.status)}`}>
-                                                    {STATUS_MAP[order.status]}
+                                                    {/* Migration: Show 'Pending' text for old 'Draft' orders */}
+                                                    {(order.status as any) === 'Draft' ? 'Chờ xử lý' : STATUS_MAP[order.status]}
                                                 </span>
                                             </td>
 
@@ -611,7 +614,8 @@ export default function OrdersPage() {
                                     Trạng thái hiện tại
                                 </label>
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(statusModal.order.status)}`}>
-                                    {STATUS_MAP[statusModal.order.status]}
+                                    {/* Migration: Show 'Pending' text for old 'Draft' orders */}
+                                    {(statusModal.order.status as any) === 'Draft' ? 'Chờ xử lý' : STATUS_MAP[statusModal.order.status]}
                                 </span>
                             </div>
 

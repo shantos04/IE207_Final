@@ -7,29 +7,77 @@ import Customer from '../models/Customer.js';
 // @access  Protected
 export const getDashboardStats = async (req, res) => {
     try {
-        // Tính tổng số
-        const totalOrders = await Order.countDocuments();
-        const totalProducts = await Product.countDocuments();
-        const totalCustomers = await Customer.countDocuments();
+        // ============= TODAY'S STATS (Hôm nay) =============
+        // Xác định khung giờ "Hôm nay" (00:00:00 -> 23:59:59)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // 00:00:00 sáng nay
 
-        // Tính tổng doanh thu (chỉ đơn Delivered)
-        const revenueResult = await Order.aggregate([
-            {
-                $match: {
-                    status: 'Delivered',
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1); // 00:00:00 sáng mai
+
+        // Thực hiện các query song song (Promise.all) cho hiệu suất tốt hơn
+        const [
+            ordersTodayCount,
+            pendingOrdersCount,
+            shippingOrdersCount,
+            revenueTodayData,
+            totalOrders,
+            totalProducts,
+            totalCustomers,
+            totalRevenueData
+        ] = await Promise.all([
+            // Đếm đơn hàng hôm nay
+            Order.countDocuments({
+                createdAt: { $gte: today, $lt: tomorrow }
+            }),
+
+            // Đếm đơn chờ xử lý (Toàn thời gian - vì cần biết tổng đơn đang chờ)
+            Order.countDocuments({ status: 'Pending' }),
+
+            // Đếm đơn đang giao (Toàn thời gian - vì cần biết tổng đơn đang giao)
+            Order.countDocuments({ status: 'Shipped' }),
+
+            // Tính doanh thu hôm nay (Chỉ đơn không bị hủy)
+            Order.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: today, $lt: tomorrow },
+                        status: { $ne: 'Cancelled' } // Không tính đơn hủy
+                    }
                 },
-            },
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: '$totalAmount' },
+                {
+                    $group: {
+                        _id: null,
+                        totalRevenue: { $sum: '$totalAmount' }
+                    }
+                }
+            ]),
+
+            // Tổng số
+            Order.countDocuments(),
+            Product.countDocuments(),
+            Customer.countDocuments(),
+
+            // Tổng doanh thu (chỉ đơn Delivered)
+            Order.aggregate([
+                {
+                    $match: {
+                        status: 'Delivered',
+                    },
                 },
-            },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$totalAmount' },
+                    },
+                },
+            ])
         ]);
 
-        const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+        const revenueToday = revenueTodayData[0]?.totalRevenue || 0;
+        const totalRevenue = totalRevenueData.length > 0 ? totalRevenueData[0].total : 0;
 
-        // Tính doanh thu tháng này
+        // ============= MONTHLY GROWTH STATS =============
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -120,12 +168,21 @@ export const getDashboardStats = async (req, res) => {
         res.status(200).json({
             success: true,
             data: {
+                // TODAY'S STATS (Mới thêm)
+                today: {
+                    ordersToday: ordersTodayCount,
+                    pendingOrders: pendingOrdersCount,
+                    shippingOrders: shippingOrdersCount,
+                    revenueToday: revenueToday
+                },
+                // TOTAL COUNTS
                 counts: {
                     revenue: totalRevenue,
                     orders: totalOrders,
                     products: totalProducts,
                     customers: totalCustomers,
                 },
+                // GROWTH PERCENTAGES
                 growth: {
                     revenue: Math.round(revenueGrowth * 10) / 10, // 1 decimal
                     orders: Math.round(ordersGrowth * 10) / 10,
@@ -134,6 +191,7 @@ export const getDashboardStats = async (req, res) => {
             },
         });
     } catch (error) {
+        console.error('Error in getDashboardStats:', error);
         res.status(500).json({
             success: false,
             message: 'Lỗi khi lấy thống kê dashboard',
