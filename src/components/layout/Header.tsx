@@ -1,4 +1,4 @@
-import { Search, Bell, Settings, ShoppingCart, AlertTriangle, UserPlus, LogOut, Users, FileText, SettingsIcon } from 'lucide-react';
+import { Search, Bell, Settings, ShoppingCart, AlertTriangle, UserPlus, LogOut, Users, FileText, SettingsIcon, ExternalLink } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -80,6 +80,18 @@ export default function Header() {
                         className="pl-10 pr-4 py-2 w-64 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                 </div>
+
+                {/* Visit Storefront Button */}
+                <a
+                    href="/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors mr-2"
+                    title="Xem trang cửa hàng"
+                >
+                    <ExternalLink className="w-4 h-4" />
+                    <span className="hidden md:inline">Xem cửa hàng</span>
+                </a>
 
                 {/* Notification Dropdown */}
                 <div className="relative" ref={notifRef}>
