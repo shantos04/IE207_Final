@@ -18,14 +18,55 @@ body {
 * {
     box-sizing: border-box;
 }
-/* Remove decorative diagonal lines from footer */
-footer,
-footer * {
+
+/* NUCLEAR OPTION: COMPLETELY REMOVE ALL DECORATIVE ELEMENTS FROM FOOTER */
+footer {
+    position: relative !important;
+    background: #111827 !important;
     background-image: none !important;
+    background-color: #111827 !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+    transform: none !important;
+    overflow: visible !important;
+}
+
+footer *,
+footer>*,
+footer div {
+    background-image: none !important;
+    clip-path: none !important;
+    -webkit-clip-path: none !important;
+    transform: none !important;
 }
 
 footer::before,
-footer::after {
+footer::after,
+footer *::before,
+footer *::after,
+footer div::before,
+footer div::after {
     content: none !important;
     display: none !important;
+    background: none !important;
+    background-image: none !important;
+    border: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* ALSO BLOCK MAIN ELEMENT DECORATIONS */
+main::before,
+main::after {
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    background-image: none !important;
+    border: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
 }
