@@ -17,7 +17,10 @@ import {
     Facebook,
     Twitter,
     Instagram,
-    Youtube
+    Youtube,
+    LayoutDashboard,
+    UserCircle,
+    ShoppingBag
 } from 'lucide-react';
 
 export default function ClientLayout() {
@@ -141,50 +144,78 @@ export default function ClientLayout() {
                                     </button>
 
                                     {showUserMenu && (
-                                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-2 z-50">
+                                        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                                            {/* Header: Avatar + Name + Email */}
                                             <div className="px-4 py-3 border-b border-gray-100">
-                                                <p className="font-semibold text-gray-900 truncate">
-                                                    {user.fullName}
-                                                </p>
-                                                <p className="text-sm text-gray-500 truncate">
-                                                    {user.email}
-                                                </p>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                                        {user.avatar ? (
+                                                            <img
+                                                                src={user.avatar}
+                                                                alt={user.fullName}
+                                                                className="w-full h-full rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-white font-semibold text-lg">
+                                                                {user.fullName?.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-bold text-gray-900 truncate text-sm">
+                                                            {user.fullName}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            {user.email}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            {/* Group 1: Quản lý - CHỈ HIỆN CHO ADMIN */}
+                                            {user.role === 'admin' && (
+                                                <>
+                                                    <Link
+                                                        to="/admin/dashboard"
+                                                        className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors"
+                                                        onClick={() => setShowUserMenu(false)}
+                                                    >
+                                                        <LayoutDashboard className="w-5 h-5" />
+                                                        <span>Trang Quản Trị</span>
+                                                    </Link>
+                                                    <div className="border-t border-gray-100 my-1"></div>
+                                                </>
+                                            )}
+
+                                            {/* Group 2: Cá nhân - AI CŨNG CÓ */}
                                             <Link
                                                 to="/account/profile"
-                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
+                                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
-                                                <User className="w-4 h-4" />
-                                                <span>Tài khoản</span>
+                                                <UserCircle className="w-4 h-4 text-gray-500" />
+                                                <span>Hồ sơ cá nhân</span>
                                             </Link>
                                             <Link
                                                 to="/account/orders"
-                                                className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
+                                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
-                                                <Package className="w-4 h-4" />
-                                                <span>Đơn hàng</span>
+                                                <ShoppingBag className="w-4 h-4 text-gray-500" />
+                                                <span>Lịch sử mua hàng</span>
                                             </Link>
-                                            {user.role === 'admin' && (
-                                                <Link
-                                                    to="/admin"
-                                                    className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-gray-700 transition"
-                                                    onClick={() => setShowUserMenu(false)}
-                                                >
-                                                    <Settings className="w-4 h-4" />
-                                                    <span>Quản trị</span>
-                                                </Link>
-                                            )}
-                                            <div className="border-t border-gray-100 mt-1 pt-1">
-                                                <button
-                                                    onClick={handleLogout}
-                                                    className="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 text-red-600 w-full transition"
-                                                >
-                                                    <LogOut className="w-4 h-4" />
-                                                    <span>Đăng xuất</span>
-                                                </button>
-                                            </div>
+
+                                            {/* Divider */}
+                                            <div className="border-t border-gray-100 my-1"></div>
+
+                                            {/* Group 3: Đăng xuất */}
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 w-full transition-colors"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                                <span>Đăng xuất</span>
+                                            </button>
                                         </div>
                                     )}
                                 </div>
