@@ -59,9 +59,15 @@ export default function ClientLayout() {
     };
 
     const handleLogout = () => {
+        // 1. Clear localStorage (handled by authService.logout)
+        // 2. Update global state (Context)
         logout();
+
+        // 3. Close dropdown menu
         setShowUserMenu(false);
-        navigate('/');
+
+        // 4. Navigate to login page immediately
+        navigate('/auth');
     };
 
     const menuItems = [

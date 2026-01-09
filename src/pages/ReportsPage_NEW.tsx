@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
     TrendingUp,
     ShoppingCart,
@@ -112,11 +112,23 @@ type DateRange = '7days' | 'thisMonth' | 'thisYear';
 export default function ReportsPage() {
     const [dateRange, setDateRange] = useState<DateRange>('thisMonth');
     const [loading, setLoading] = useState(true);
+    const [sortBy, setSortBy] = useState<'amount' | 'date'>('amount');
 
     // State for the 3 new reports
     const [statusDistribution, setStatusDistribution] = useState<OrderStatusDistribution[]>([]);
     const [productPerformance, setProductPerformance] = useState<ProductSalesPerformance[]>([]);
     const [revenueByOrder, setRevenueByOrder] = useState<RevenueByOrder[]>([]);
+
+    // Sorted revenue by order based on sortBy state
+    const sortedRevenueByOrder = useMemo(() => {
+        return [...revenueByOrder].sort((a, b) => {
+            if (sortBy === 'amount') {
+                return b.totalPrice - a.totalPrice; // Giá cao xếp trước
+            } else {
+                return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime(); // Mới nhất xếp trước
+            }
+        });
+    }, [revenueByOrder, sortBy]);
 
     useEffect(() => {
         fetchReportsData();
@@ -454,20 +466,34 @@ export default function ReportsPage() {
 
                 {/* BLOCK 3: Scrollable Table - Revenue by Order */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                            <FileText className="w-5 h-5 text-purple-600" />
+                    <div className="flex justify-between items-center mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-purple-100 rounded-lg">
+                                <FileText className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">
+                                    Doanh thu theo Đơn hàng
+                                </h2>
+                                <p className="text-xs text-gray-500">
+                                    {sortBy === 'amount' ? 'Top đơn hàng giá trị cao' : 'Các giao dịch gần đây'}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900">
-                                Doanh thu theo Đơn hàng
-                            </h2>
-                            <p className="text-xs text-gray-500">Chi tiết theo giá trị</p>
-                        </div>
+
+                        {/* Dropdown Sort */}
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as 'amount' | 'date')}
+                            className="text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600 bg-gray-50 py-2 pl-3 pr-8 cursor-pointer transition-all hover:bg-gray-100"
+                        >
+                            <option value="amount">💰 Giá trị cao nhất</option>
+                            <option value="date">🕒 Mới nhất</option>
+                        </select>
                     </div>
 
                     <div className="space-y-3 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
-                        {revenueByOrder.map((order, index) => (
+                        {sortedRevenueByOrder.map((order, index) => (
                             <div
                                 key={index}
                                 className="p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-md hover:border-purple-200 transition-all"

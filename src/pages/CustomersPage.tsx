@@ -1,47 +1,59 @@
-import { useEffect, useState } from 'react';
-import { Users, Search, Plus, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Users, Search, Plus, Edit2, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { customerService, Customer } from '../services/customerService';
 
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [limit, setLimit] = useState(10);
 
-    useEffect(() => {
-        fetchCustomers();
-    }, [currentPage, limit]);
-
-    const fetchCustomers = async () => {
+    // Use useCallback to memoize fetchCustomers function
+    const fetchCustomers = useCallback(async () => {
         try {
             setLoading(true);
+            setError(null); // Reset error state
+
             const params: any = {
                 page: currentPage,
                 limit,
             };
 
-            if (searchKeyword) {
-                params.keyword = searchKeyword;
+            if (searchKeyword.trim()) {
+                params.keyword = searchKeyword.trim();
             }
 
+            console.log('📡 Fetching customers with params:', params);
             const response = await customerService.getCustomers(params);
+            console.log('✅ Customers response:', response);
 
             if (response.success) {
-                setCustomers(response.data);
-                setTotalPages(response.pagination.pages);
+                setCustomers(response.data || []);
+                setTotalPages(response.pagination?.pages || 1);
+            } else {
+                throw new Error(response.message || 'Failed to fetch customers');
             }
         } catch (err: any) {
-            console.error('Error fetching customers:', err);
+            console.error('❌ Error fetching customers:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Không thể tải danh sách khách hàng';
+            setError(errorMessage);
+            setCustomers([]); // Clear customers on error
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, limit, searchKeyword]);
+
+    // Fetch customers when dependencies change
+    useEffect(() => {
+        fetchCustomers();
+    }, [fetchCustomers]);
 
     const handleSearch = () => {
         setCurrentPage(1);
-        fetchCustomers();
+        // No need to call fetchCustomers() - useEffect will handle it
     };
 
     const handleDelete = async (id: string, name: string) => {
@@ -187,14 +199,37 @@ export default function CustomersPage() {
             {/* Table */}
             <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
                 {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    <div className="flex flex-col items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-sm text-gray-500">Đang tải danh sách khách hàng...</p>
+                    </div>
+                ) : error ? (
+                    <div className="flex flex-col items-center justify-center py-12 px-6">
+                        <div className="bg-red-50 rounded-full p-4 mb-4">
+                            <AlertCircle className="h-12 w-12 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Có lỗi xảy ra</h3>
+                        <p className="text-sm text-gray-600 text-center mb-6 max-w-md">
+                            {error}
+                        </p>
+                        <button
+                            onClick={fetchCustomers}
+                            className="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            Thử lại
+                        </button>
                     </div>
                 ) : customers.length === 0 ? (
                     <div className="text-center py-12">
                         <Users className="mx-auto h-12 w-12 text-gray-400" />
                         <h3 className="mt-2 text-sm font-medium text-gray-900">Không tìm thấy khách hàng</h3>
-                        <p className="mt-1 text-sm text-gray-500">Thử thay đổi từ khóa tìm kiếm hoặc thêm khách hàng mới.</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                            {searchKeyword
+                                ? 'Thử thay đổi từ khóa tìm kiếm hoặc thêm khách hàng mới.'
+                                : 'Chưa có khách hàng nào trong hệ thống. Hãy thêm khách hàng đầu tiên!'
+                            }
+                        </p>
                     </div>
                 ) : (
                     <>
@@ -341,8 +376,8 @@ export default function CustomersPage() {
                                                         key={page}
                                                         onClick={() => setCurrentPage(page as number)}
                                                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === page
-                                                                ? 'z-10 bg-blue-600 border-blue-600 text-white'
-                                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                            ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                                                             }`}
                                                     >
                                                         {page}

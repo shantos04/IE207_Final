@@ -180,6 +180,61 @@ export default function OrdersPage() {
         );
     });
 
+    // Smart pagination renderer - only show pages around current page
+    const renderPagination = () => {
+        const pages: (number | string)[] = [];
+        const delta = 2; // Number of pages to show on each side of current page
+
+        // Always show first page
+        pages.push(1);
+
+        // Show dots if there's a gap between 1 and the range
+        if (currentPage - delta > 2) {
+            pages.push('...');
+        }
+
+        // Show pages around current page
+        for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+            pages.push(i);
+        }
+
+        // Show dots if there's a gap between range and last page
+        if (currentPage + delta < totalPages - 1) {
+            pages.push('...');
+        }
+
+        // Always show last page (if more than 1 page)
+        if (totalPages > 1) {
+            pages.push(totalPages);
+        }
+
+        return pages.map((page, index) => {
+            if (page === '...') {
+                return (
+                    <span
+                        key={`dots-${index}`}
+                        className="px-3 py-2 text-sm text-gray-500"
+                    >
+                        ...
+                    </span>
+                );
+            }
+
+            return (
+                <button
+                    key={page}
+                    onClick={() => setCurrentPage(page as number)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                >
+                    {page}
+                </button>
+            );
+        });
+    };
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -504,18 +559,10 @@ export default function OrdersPage() {
                                     >
                                         Trước
                                     </button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                        <button
-                                            key={page}
-                                            onClick={() => setCurrentPage(page)}
-                                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${page === currentPage
-                                                    ? 'bg-blue-600 text-white'
-                                                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {page}
-                                        </button>
-                                    ))}
+
+                                    {/* Smart pagination - only show relevant pages */}
+                                    {renderPagination()}
+
                                     <button
                                         onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                                         disabled={currentPage === totalPages}
