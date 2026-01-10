@@ -33,13 +33,61 @@ export const getCustomers = async (req, res) => {
 
         const count = await Customer.countDocuments(query);
 
-        // Mock totalOrders and totalSpent for UI display
+        // === REAL AGGREGATION: Calculate actual order stats per customer ===
+        // Get customer emails to match with User collection
+        const customerEmails = customers.map(c => c.email);
+
+        // Find User IDs for these customers
+        const users = await Customer.model('User').find(
+            { email: { $in: customerEmails } },
+            { email: 1, _id: 1 }
+        );
+
+        // Create email -> userId map
+        const emailToUserId = {};
+        users.forEach(user => {
+            emailToUserId[user.email] = user._id;
+        });
+
+        // Aggregate orders by userId (excluding Cancelled orders)
+        const orderStats = await Order.aggregate([
+            {
+                $match: {
+                    user: { $in: users.map(u => u._id) },
+                    status: { $ne: 'Cancelled' } // Exclude cancelled orders
+                }
+            },
+            {
+                $group: {
+                    _id: '$user', // Group by userId
+                    totalOrders: { $sum: 1 }, // Count distinct order documents
+                    totalSpent: { $sum: '$totalAmount' } // Sum total amount
+                }
+            }
+        ]);
+
+        // Create userId -> stats map
+        const statsMap = {};
+        orderStats.forEach(stat => {
+            statsMap[stat._id.toString()] = {
+                totalOrders: stat.totalOrders,
+                totalSpent: stat.totalSpent
+            };
+        });
+
+        // Map stats to customers
         const customersWithStats = customers.map((customer) => {
             const customerObj = customer.toObject();
+            const userId = emailToUserId[customer.email];
 
-            // Generate random stats for demo
-            customerObj.totalOrders = Math.floor(Math.random() * 50) + 1; // 1-50 orders
-            customerObj.totalSpent = Math.floor(Math.random() * 10000000) + 500000; // 500k-10.5M VND
+            if (userId && statsMap[userId.toString()]) {
+                customerObj.totalOrders = statsMap[userId.toString()].totalOrders;
+                customerObj.totalSpent = statsMap[userId.toString()].totalSpent;
+            } else {
+                // Customer has no orders yet
+                customerObj.totalOrders = 0;
+                customerObj.totalSpent = 0;
+            }
 
             return customerObj;
         });
@@ -75,10 +123,34 @@ export const getCustomer = async (req, res) => {
             });
         }
 
-        // Get real order stats
-        const orders = await Order.find({ 'customer.email': customer.email });
-        const totalOrders = orders.length;
-        const totalSpent = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+        // Get real order stats by userId (more accurate than email)
+        const user = await Customer.model('User').findOne({ email: customer.email });
+
+        let totalOrders = 0;
+        let totalSpent = 0;
+
+        if (user) {
+            const orderStats = await Order.aggregate([
+                {
+                    $match: {
+                        user: user._id,
+                        status: { $ne: 'Cancelled' } // Exclude cancelled orders
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalOrders: { $sum: 1 },
+                        totalSpent: { $sum: '$totalAmount' }
+                    }
+                }
+            ]);
+
+            if (orderStats.length > 0) {
+                totalOrders = orderStats[0].totalOrders;
+                totalSpent = orderStats[0].totalSpent;
+            }
+        }
 
         const customerObj = customer.toObject();
         customerObj.totalOrders = totalOrders;

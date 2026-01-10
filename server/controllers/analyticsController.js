@@ -159,30 +159,21 @@ export const getTopProducts = async (req, res) => {
 /**
  * API 3: Thống kê Trạng thái đơn hàng (Order Status Pie Chart)
  * GET /api/analytics/status
+ * 
+ * NOTE: This endpoint shows CURRENT operational state (live snapshot),
+ * NOT filtered by date. It matches Order Management page counts.
  */
 export const getOrderStatusStats = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-
-        // Build match query
-        const matchQuery = {};
-
-        // Add date filter if provided
-        if (startDate || endDate) {
-            matchQuery.createdAt = {};
-            if (startDate) {
-                matchQuery.createdAt.$gte = new Date(startDate);
-            }
-            if (endDate) {
-                matchQuery.createdAt.$lte = new Date(endDate);
-            }
-        }
+        // === CRITICAL FIX: NO DATE FILTER for status distribution ===
+        // Operational statuses (Pending, Shipped, etc.) should reflect
+        // the CURRENT state of orders, not when they were created.
+        // Example: Order created last month but still "Shipped" today
+        // should appear in the chart.
 
         const statusStats = await Order.aggregate([
             {
-                $match: matchQuery
-            },
-            {
+                // No $match stage - count ALL orders by current status
                 $group: {
                     _id: '$status',
                     count: { $sum: 1 },
@@ -307,30 +298,19 @@ export const getOverviewStats = async (req, res) => {
 /**
  * API 4: Báo cáo Phân phối Trạng thái Đơn hàng (Order Status Distribution)
  * GET /api/analytics/order-status-distribution
+ * 
+ * NOTE: This endpoint shows CURRENT operational state (live snapshot),
+ * NOT filtered by date. It matches Order Management page counts.
  */
 export const getOrderStatusDistribution = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-
-        // Build match query
-        const matchQuery = {};
-
-        // Add date filter if provided
-        if (startDate || endDate) {
-            matchQuery.createdAt = {};
-            if (startDate) {
-                matchQuery.createdAt.$gte = new Date(startDate);
-            }
-            if (endDate) {
-                matchQuery.createdAt.$lte = new Date(endDate);
-            }
-        }
+        // === CRITICAL FIX: NO DATE FILTER for status distribution ===
+        // This chart visualizes the CURRENT operational state of all orders,
+        // ensuring consistency with Order Management summary cards.
 
         const statusDistribution = await Order.aggregate([
             {
-                $match: matchQuery
-            },
-            {
+                // No $match stage - count ALL orders by current status
                 $group: {
                     _id: '$status',
                     count: { $sum: 1 }

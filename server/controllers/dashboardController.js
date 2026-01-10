@@ -53,8 +53,8 @@ export const getDashboardStats = async (req, res) => {
                 }
             ]),
 
-            // Tổng số
-            Order.countDocuments(),
+            // Tổng số (All-Time, excluding Cancelled orders)
+            Order.countDocuments({ status: { $ne: 'Cancelled' } }),
             Product.countDocuments(),
             Customer.countDocuments(),
 
