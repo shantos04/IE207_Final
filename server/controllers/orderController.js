@@ -1,6 +1,7 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
+import Invoice from '../models/Invoice.js';
 
 // @desc    Get my orders (Customer)
 // @route   GET /api/orders/myorders
@@ -235,6 +236,26 @@ export const createOrder = async (req, res) => {
             status: 'Pending', // Explicitly set to Pending
             createdBy: req.user._id, // Fix: Use _id for consistency
         });
+
+        // --- AUTO GENERATE INVOICE START ---
+        try {
+            const invoice = new Invoice({
+                user: req.user._id,
+                order: order._id,
+                totalAmount: order.totalAmount,
+                status: 'Unpaid',
+                paymentMethod: order.paymentMethod,
+                issueDate: Date.now(),
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Hạn thanh toán 7 ngày
+                notes: `Hóa đơn cho đơn hàng ${order.orderCode}`,
+            });
+            await invoice.save();
+            console.log("✅ Đã tự động tạo hóa đơn cho đơn hàng:", order.orderCode);
+        } catch (error) {
+            console.error("⚠ Lỗi tạo hóa đơn tự động:", error);
+            // Không throw error để tránh làm lỗi quy trình đặt hàng chính
+        }
+        // --- AUTO GENERATE INVOICE END ---
 
         res.status(201).json({
             success: true,

@@ -17,8 +17,9 @@ const customerSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            required: [true, 'Số điện thoại là bắt buộc'],
+            required: false, // Changed: Not required for Google OAuth users
             trim: true,
+            default: '0000000000', // Default phone for OAuth users
             match: [/^[0-9]{10,11}$/, 'Số điện thoại phải có 10-11 chữ số'],
         },
         address: {

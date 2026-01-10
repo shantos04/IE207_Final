@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Customer from '../models/Customer.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
@@ -138,12 +139,12 @@ export const googleLogin = async (req, res) => {
             });
         }
 
-        // Check if user exists
+        // === STEP 1: Create/Update User in Users Collection ===
         let user = await User.findOne({ email });
 
         if (!user) {
+            // Create new user - this triggers pre('save') middleware for password hashing
             console.log('👉 User chưa tồn tại, đang tạo mới...');
-            // Create new user with random password
             const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
 
             user = await User.create({
@@ -151,13 +152,45 @@ export const googleLogin = async (req, res) => {
                 email: email,
                 password: randomPassword,
                 username: email.split('@')[0] + Math.random().toString(36).slice(-4),
-                role: 'customer', // Default role for Google login users (customer, not user)
+                role: 'user',
                 avatar: picture,
             });
             console.log('✅ User mới đã được tạo:', user.email);
         } else {
-            console.log('✅ User đã tồn tại:', user.email);
+            // Update existing user's profile data
+            console.log('👉 User đã tồn tại, đang cập nhật thông tin...');
+            user.fullName = name;
+            user.avatar = picture;
+            await user.save();
+            console.log('✅ User đã được cập nhật:', user.email);
         }
+
+        // === STEP 2: Create/Update Customer in Customers Collection (Use Upsert) ===
+        const defaultPhone = '0000000000'; // Placeholder for Google users
+
+        let customer = await Customer.findOneAndUpdate(
+            { email }, // Find by email
+            {
+                $set: {
+                    name: name,
+                    email: email,
+                    address: '', // Can be updated later
+                },
+                $setOnInsert: {
+                    phone: defaultPhone,
+                    loyaltyPoints: 0,
+                    status: 'active',
+                },
+            },
+            {
+                new: true,
+                upsert: true,
+                runValidators: false, // Skip validation for default phone
+            }
+        );
+
+        console.log('✅ Customer đã được tạo/cập nhật:', customer.email);
+        console.log('📋 Customer ID:', customer._id);
 
         // Generate JWT token
         const token = generateToken(user._id);
@@ -191,6 +224,159 @@ export const googleLogin = async (req, res) => {
             message: 'Google Token không hợp lệ hoặc đã hết hạn',
             error: error.message,
             details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        });
+    }
+};
+
+// @desc    Get all users (Admin only)
+// @route   GET /api/users
+// @access  Private/Admin
+export const getUsers = async (req, res) => {
+    try {
+        const pageSize = 10;
+        const page = Number(req.query.pageNumber) || 1;
+
+        // Tìm kiếm đa năng: name, email, username, phone
+        const keyword = req.query.keyword
+            ? {
+                $or: [
+                    { fullName: { $regex: req.query.keyword, $options: 'i' } },
+                    { email: { $regex: req.query.keyword, $options: 'i' } },
+                    { username: { $regex: req.query.keyword, $options: 'i' } },
+                    { phone: { $regex: req.query.keyword, $options: 'i' } },
+                ],
+            }
+            : {};
+
+        // --- DEBUG LOG (Xem server terminal để check) ---
+        console.log('🔍 Admin đang tìm kiếm:', req.query.keyword || 'Tất cả');
+        console.log('📋 Query MongoDB:', JSON.stringify(keyword));
+
+        // Filter by role if provided
+        const roleFilter = req.query.role ? { role: req.query.role } : {};
+
+        // Combine filters
+        const filter = { ...keyword, ...roleFilter };
+
+        // Count total documents
+        const count = await User.countDocuments(filter);
+
+        // Get users with pagination
+        const users = await User.find(filter)
+            .select('-password') // Exclude password
+            .limit(pageSize)
+            .skip(pageSize * (page - 1))
+            .sort({ createdAt: -1 }); // Newest first
+
+        res.status(200).json({
+            success: true,
+            data: users,
+            page,
+            pages: Math.ceil(count / pageSize),
+            total: count,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+// @desc    Get user by ID (Admin only)
+// @route   GET /api/users/:id
+// @access  Private/Admin
+export const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: user,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+// @desc    Delete user (Admin only)
+// @route   DELETE /api/users/:id
+// @access  Private/Admin
+export const deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng',
+            });
+        }
+
+        // Prevent deleting yourself
+        if (user._id.toString() === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không thể xóa tài khoản của chính bạn',
+            });
+        }
+
+        await user.deleteOne();
+
+        res.status(200).json({
+            success: true,
+            message: 'Đã xóa người dùng thành công',
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+// @desc    Update user (Admin only)
+// @route   PUT /api/users/:id
+// @access  Private/Admin
+export const updateUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng',
+            });
+        }
+
+        const { fullName, email, role, isActive } = req.body;
+
+        if (fullName) user.fullName = fullName;
+        if (email) user.email = email;
+        if (role) user.role = role;
+        if (typeof isActive !== 'undefined') user.isActive = isActive;
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật người dùng thành công',
+            data: user,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
         });
     }
 };

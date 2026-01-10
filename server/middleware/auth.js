@@ -62,6 +62,18 @@ export const authorize = (...roles) => {
     };
 };
 
+// Admin middleware - only allow admin role
+export const admin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        return res.status(403).json({
+            success: false,
+            message: 'Chỉ admin mới có quyền truy cập',
+        });
+    }
+};
+
 // Optional authentication - không bắt buộc nhưng sẽ gán user nếu có token
 export const optionalAuth = async (req, res, next) => {
     let token;
