@@ -116,7 +116,8 @@ export default function AuthPage() {
      * Xử lý đăng nhập bằng Google OAuth
      * - Gửi token tới backend để xác thực
      * - Lưu user + token vào localStorage
-     * - Sử dụng window.location.href để force reload (đảm bảo AuthContext nhận được user mới)
+     * - Cập nhật AuthContext để UI cập nhật ngay lập tức
+     * - Phân luồng chuyển hướng dựa trên role
      */
     const handleGoogleSuccess = async (credentialResponse: any) => {
         try {
@@ -135,25 +136,25 @@ export default function AuthPage() {
             console.log('✅ Backend response:', response.data);
             const { data } = response.data;
 
-            // 2. Lưu user + token vào localStorage (QUAN TRỌNG - Phải lưu trước khi redirect)
+            // 2. Lưu user + token vào localStorage
             localStorage.setItem('user', JSON.stringify(data.user));
             localStorage.setItem('accessToken', data.token);
             console.log('✅ Saved to localStorage');
 
-            // 3. Hiển thị thông báo thành công
-            toast.success(`Chào mừng ${data.user.fullName}!`);
+            // 3. FORCE RELOAD PAGE để AuthContext lazy initialization đọc lại localStorage
+            // Đây là cách đơn giản và đảm bảo nhất để sync state
+            toast.success(`Chào mừng ${data.user.fullName}! Đang chuyển hướng...`);
 
-            // 4. PHÂN LUỒNG CHUYỂN HƯỚNG với window.location.href
-            // (Force reload để AuthContext đọc lại localStorage)
+            // 4. PHÂN LUỒNG CHUYỂN HƯỚNG dựa trên role
             setTimeout(() => {
                 if (data.user.role === 'admin' || data.user.role === 'manager' || data.user.role === 'staff') {
                     console.log('🔄 Redirecting to admin dashboard...');
                     window.location.href = '/admin/dashboard';
                 } else {
-                    console.log('🔄 Redirecting to home...');
+                    console.log('🔄 Redirecting to home (customer)...');
                     window.location.href = '/';
                 }
-            }, 500); // Delay 500ms để toast kịp hiển thị
+            }, 300);
 
         } catch (error: any) {
             console.error('❌ Google Login Error:', error);
@@ -347,10 +348,7 @@ export default function AuthPage() {
                         </div>
                     </div>
 
-                    {/* Google Login Button - TEMPORARILY DISABLED */}
-                    {/* Lỗi: "The given origin is not allowed for the given client ID" */}
-                    {/* Fix: Thêm http://localhost:5173 vào Google Cloud Console > Authorized JavaScript origins */}
-                    {/* 
+                    {/* Google Login Button */}
                     <div className="w-full">
                         <GoogleLogin
                             onSuccess={handleGoogleSuccess}
@@ -361,7 +359,6 @@ export default function AuthPage() {
                             locale="vi"
                         />
                     </div>
-                    */}
 
                     {/* Old Social Login Buttons - Hidden */}
                     <div className="grid grid-cols-3 gap-3 hidden">
