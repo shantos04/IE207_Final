@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { productService } from '../services/productService';
 import { useCart } from '../contexts/CartContext';
 import toast from 'react-hot-toast';
+import CategorySection from '../components/CategorySection';
 
 export default function HomePage() {
     const [newProducts, setNewProducts] = useState<any[]>([]);
@@ -24,51 +25,6 @@ export default function HomePage() {
         };
         fetchNewProducts();
     }, []);
-
-    const categories = [
-        {
-            icon: Cpu,
-            name: 'Vi điều khiển',
-            slug: 'vi-dieu-khien',
-            color: 'from-blue-500 to-blue-600',
-            count: '150+',
-        },
-        {
-            icon: Gauge,
-            name: 'Cảm biến',
-            slug: 'cam-bien',
-            color: 'from-green-500 to-green-600',
-            count: '200+',
-        },
-        {
-            icon: Wifi,
-            name: 'Module truyền thông',
-            slug: 'module-truyen-thong',
-            color: 'from-purple-500 to-purple-600',
-            count: '80+',
-        },
-        {
-            icon: Zap,
-            name: 'Linh kiện điện tử',
-            slug: 'linh-kien-dien-tu',
-            color: 'from-orange-500 to-orange-600',
-            count: '300+',
-        },
-        {
-            icon: Package,
-            name: 'Module nguồn',
-            slug: 'module-nguon',
-            color: 'from-red-500 to-red-600',
-            count: '50+',
-        },
-        {
-            icon: CircuitBoard,
-            name: 'Bo mạch phát triển',
-            slug: 'bo-mach',
-            color: 'from-indigo-500 to-indigo-600',
-            count: '100+',
-        },
-    ];
 
     const benefits = [
         {
@@ -174,37 +130,8 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Featured Categories */}
-            <section className="py-16 bg-white">
-                <div className="container mx-auto px-4">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                            Danh mục nổi bật
-                        </h2>
-                        <p className="text-gray-600">
-                            Khám phá các danh mục linh kiện điện tử phổ biến
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-                        {categories.map((category, index) => (
-                            <Link
-                                key={index}
-                                to={`/shop?category=${category.slug}`}
-                                className="group"
-                            >
-                                <div className="bg-gradient-to-br ${category.color} rounded-2xl p-6 text-center text-white transform transition hover:scale-105 hover:shadow-xl">
-                                    <div className="flex justify-center mb-4">
-                                        <category.icon className="w-12 h-12" />
-                                    </div>
-                                    <h3 className="font-semibold mb-2">{category.name}</h3>
-                                    <p className="text-sm opacity-90">{category.count}</p>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            {/* Featured Categories - NEW COMPONENT */}
+            <CategorySection />
 
             {/* New Arrivals */}
             <section className="py-16 bg-gray-50">
