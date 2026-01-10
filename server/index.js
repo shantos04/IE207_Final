@@ -36,14 +36,16 @@ const app = express();
 // Security headers
 app.use(helmet());
 
-// CORS
+// CORS - Updated for Vercel deployment
 app.use(
     cors({
         origin: [
             process.env.CLIENT_URL || 'http://localhost:3000',
             'http://localhost:5173', // Vite default port
             'http://localhost:3000', // React default port
-            'http://localhost:3001'  // Alternative React port
+            'http://localhost:3001', // Alternative React port
+            /https:\/\/.*\.vercel\.app$/, // All Vercel deployments
+            /https:\/\/ie207-final.*\.vercel\.app$/ // Your specific Vercel app (optional)
         ],
         credentials: true,
     })
