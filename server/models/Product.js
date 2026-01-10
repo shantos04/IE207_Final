@@ -74,7 +74,6 @@ const productSchema = new mongoose.Schema(
 );
 
 // Index để tìm kiếm nhanh hơn
-productSchema.index({ productCode: 1 });
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ category: 1, status: 1 });
 

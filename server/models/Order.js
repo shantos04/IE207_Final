@@ -118,7 +118,6 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Index
-orderSchema.index({ orderCode: 1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ 'customer.email': 1 });
 

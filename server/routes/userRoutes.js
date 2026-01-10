@@ -1,8 +1,11 @@
 import express from 'express';
-import { getUserProfile, updateUserProfile } from '../controllers/userController.js';
+import { getUserProfile, updateUserProfile, googleLogin } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Public routes
+router.post('/google-login', googleLogin);
 
 // Protected routes - require authentication
 router

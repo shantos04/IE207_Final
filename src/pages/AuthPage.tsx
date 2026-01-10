@@ -4,8 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, User as UserIcon, Chrome } from 'lucide-react';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 // Validation schemas
 const loginSchema = z.object({
@@ -86,6 +88,53 @@ export default function AuthPage() {
         } catch (error: any) {
             toast.error(error.message || 'Đăng ký thất bại');
         }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        try {
+            console.log('✅ Google Response:', credentialResponse);
+
+            if (!credentialResponse.credential) {
+                toast.error('Không nhận được token từ Google');
+                return;
+            }
+
+            const { credential } = credentialResponse;
+            console.log('🔑 Sending token to backend...');
+
+            // Call backend API
+            const response = await api.post('/users/google-login', { idToken: credential });
+            console.log('✅ Backend response:', response.data);
+            const { data } = response.data;
+
+            // Save to localStorage (CRITICAL - Must save before any redirect)
+            localStorage.setItem('userInfo', JSON.stringify(data.user));
+            localStorage.setItem('token', data.token);
+            console.log('✅ Saved to localStorage');
+
+            // Show success message
+            toast.success(`Chào mừng ${data.user.fullName}!`);
+
+            // Hard redirect with window.location.href to force reload
+            // This ensures App reads fresh data from localStorage
+            setTimeout(() => {
+                if (data.user.role === 'admin' || data.user.role === 'manager' || data.user.role === 'staff') {
+                    console.log('🔄 Redirecting to admin dashboard...');
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    console.log('🔄 Redirecting to home...');
+                    window.location.href = '/';
+                }
+            }, 500); // Delay 500ms để toast kịp hiện
+
+        } catch (error: any) {
+            console.error('❌ Google Login Error:', error);
+            toast.error(error.response?.data?.message || 'Đăng nhập Google thất bại');
+        }
+    };
+
+    const handleGoogleError = () => {
+        toast.error('Đăng nhập Google thất bại');
     };
 
     return (
@@ -270,8 +319,20 @@ export default function AuthPage() {
                         </div>
                     </div>
 
-                    {/* Social Login Buttons */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Google Login Button */}
+                    <div className="w-full">
+                        <GoogleLogin
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            theme="outline"
+                            size="large"
+                            text="continue_with"
+                            locale="vi"
+                        />
+                    </div>
+
+                    {/* Old Social Login Buttons - Hidden */}
+                    <div className="grid grid-cols-3 gap-3 hidden">
                         <button
                             type="button"
                             aria-label="Đăng nhập bằng Twitter"

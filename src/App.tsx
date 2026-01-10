@@ -22,6 +22,8 @@ import CheckoutPage from './pages/CheckoutPage'
 import ProfilePage from './pages/client/account/ProfilePage'
 import MyOrdersPage from './pages/client/account/MyOrdersPage'
 import ChangePasswordPage from './pages/client/account/ChangePasswordPage'
+import AboutPage from './pages/AboutPage'
+import ContactPage from './pages/ContactPage'
 
 function App() {
     return (
@@ -65,6 +67,8 @@ function App() {
                             <Route path="/product/:id" element={<ProductDetailPage />} />
                             <Route path="/cart" element={<CartPage />} />
                             <Route path="/checkout" element={<CheckoutPage />} />
+                            <Route path="/about" element={<AboutPage />} />
+                            <Route path="/contact" element={<ContactPage />} />
 
                             {/* Account Routes - Nested under ClientLayout */}
                             <Route path="account" element={<AccountLayout />}>
