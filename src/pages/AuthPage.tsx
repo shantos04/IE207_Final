@@ -54,42 +54,70 @@ export default function AuthPage() {
         resolver: zodResolver(signUpSchema),
     });
 
+    /**
+     * Xử lý đăng nhập
+     * - Gọi API thông qua AuthContext
+     * - Tự động lưu user + token vào localStorage (xử lý trong authService)
+     * - Phân luồng chuyển hướng dựa trên role
+     */
     const onLoginSubmit = async (data: LoginFormData) => {
         try {
+            // 1. Gọi API login (đã tự động lưu localStorage trong authService.login)
             const user = await login(data);
-            toast.success('Đăng nhập thành công!');
 
-            // Role-based navigation
+            // 2. Hiển thị thông báo thành công
+            toast.success(`Chào mừng ${user.fullName}!`);
+
+            // 3. PHÂN LUỒNG CHUYỂN HƯỚNG dựa trên role
             if (user.role === 'admin' || user.role === 'manager' || user.role === 'staff') {
-                navigate('/admin/dashboard'); // Admin/Manager/Staff -> Admin Dashboard
+                // Admin/Manager/Staff -> Trang quản trị
+                navigate('/admin/dashboard');
             } else {
-                navigate('/'); // Customer -> Home page
+                // Customer -> Trang chủ
+                navigate('/');
             }
         } catch (error: any) {
             toast.error(error.message || 'Đăng nhập thất bại');
         }
     };
 
+    /**
+     * Xử lý đăng ký tài khoản mới
+     * - Gọi API thông qua AuthContext
+     * - Tự động lưu user + token vào localStorage (xử lý trong authService)
+     * - Phân luồng chuyển hướng dựa trên role
+     */
     const onSignUpSubmit = async (data: SignUpFormData) => {
         try {
+            // 1. Gọi API đăng ký (đã tự động lưu localStorage trong authService.signUp)
             const user = await signUp({
                 fullName: data.fullName,
                 email: data.email,
                 password: data.password,
             });
-            toast.success('Đăng ký thành công!');
 
-            // Role-based navigation
+            // 2. Hiển thị thông báo thành công
+            toast.success(`Chào mừng ${user.fullName}!`);
+
+            // 3. PHÂN LUỒNG CHUYỂN HƯỚNG dựa trên role
             if (user.role === 'admin' || user.role === 'manager' || user.role === 'staff') {
-                navigate('/admin/dashboard'); // Admin/Manager/Staff -> Admin Dashboard
+                // Admin/Manager/Staff -> Trang quản trị
+                navigate('/admin/dashboard');
             } else {
-                navigate('/'); // Customer -> Home page
+                // Customer -> Trang chủ
+                navigate('/');
             }
         } catch (error: any) {
             toast.error(error.message || 'Đăng ký thất bại');
         }
     };
 
+    /**
+     * Xử lý đăng nhập bằng Google OAuth
+     * - Gửi token tới backend để xác thực
+     * - Lưu user + token vào localStorage
+     * - Sử dụng window.location.href để force reload (đảm bảo AuthContext nhận được user mới)
+     */
     const handleGoogleSuccess = async (credentialResponse: any) => {
         try {
             console.log('✅ Google Response:', credentialResponse);
@@ -102,21 +130,21 @@ export default function AuthPage() {
             const { credential } = credentialResponse;
             console.log('🔑 Sending token to backend...');
 
-            // Call backend API
+            // 1. Gọi API backend để xác thực Google token
             const response = await api.post('/users/google-login', { idToken: credential });
             console.log('✅ Backend response:', response.data);
             const { data } = response.data;
 
-            // Save to localStorage (CRITICAL - Must save before any redirect)
-            localStorage.setItem('userInfo', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            // 2. Lưu user + token vào localStorage (QUAN TRỌNG - Phải lưu trước khi redirect)
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('accessToken', data.token);
             console.log('✅ Saved to localStorage');
 
-            // Show success message
+            // 3. Hiển thị thông báo thành công
             toast.success(`Chào mừng ${data.user.fullName}!`);
 
-            // Hard redirect with window.location.href to force reload
-            // This ensures App reads fresh data from localStorage
+            // 4. PHÂN LUỒNG CHUYỂN HƯỚNG với window.location.href
+            // (Force reload để AuthContext đọc lại localStorage)
             setTimeout(() => {
                 if (data.user.role === 'admin' || data.user.role === 'manager' || data.user.role === 'staff') {
                     console.log('🔄 Redirecting to admin dashboard...');
@@ -125,7 +153,7 @@ export default function AuthPage() {
                     console.log('🔄 Redirecting to home...');
                     window.location.href = '/';
                 }
-            }, 500); // Delay 500ms để toast kịp hiện
+            }, 500); // Delay 500ms để toast kịp hiển thị
 
         } catch (error: any) {
             console.error('❌ Google Login Error:', error);
@@ -319,7 +347,10 @@ export default function AuthPage() {
                         </div>
                     </div>
 
-                    {/* Google Login Button */}
+                    {/* Google Login Button - TEMPORARILY DISABLED */}
+                    {/* Lỗi: "The given origin is not allowed for the given client ID" */}
+                    {/* Fix: Thêm http://localhost:5173 vào Google Cloud Console > Authorized JavaScript origins */}
+                    {/* 
                     <div className="w-full">
                         <GoogleLogin
                             onSuccess={handleGoogleSuccess}
@@ -330,6 +361,7 @@ export default function AuthPage() {
                             locale="vi"
                         />
                     </div>
+                    */}
 
                     {/* Old Social Login Buttons - Hidden */}
                     <div className="grid grid-cols-3 gap-3 hidden">

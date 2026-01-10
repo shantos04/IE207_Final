@@ -14,20 +14,46 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * AuthProvider - Quản lý trạng thái xác thực người dùng
+ * 
+ * Tính năng:
+ * - Lazy initialization: Tự động khôi phục phiên đăng nhập từ localStorage
+ * - Đồng bộ token với axios interceptor
+ * - Xử lý login/logout/signup
+ * - Cập nhật thông tin user
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    // 1. LAZY INITIALIZATION - Khôi phục user từ localStorage ngay khi khởi tạo
+    const [user, setUser] = useState<User | null>(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            const token = localStorage.getItem('accessToken');
 
-    useEffect(() => {
-        // Check if user is already logged in
-        const currentUser = authService.getCurrentUser();
-        const token = localStorage.getItem('accessToken');
-
-        if (currentUser && token) {
-            setUser(currentUser);
+            // Chỉ khôi phục user nếu cả user và token đều tồn tại
+            if (storedUser && token) {
+                return JSON.parse(storedUser);
+            }
+            return null;
+        } catch (error) {
+            console.error('Lỗi đọc localStorage:', error);
+            // Xóa dữ liệu lỗi
+            localStorage.removeItem('user');
+            localStorage.removeItem('accessToken');
+            return null;
         }
-        setIsLoading(false);
-    }, []);
+    });
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    // 2. Đồng bộ token với axios instance khi app khởi động
+    useEffect(() => {
+        const token = localStorage.getItem('accessToken');
+        if (token && user) {
+            // Token đã được cấu hình trong api.ts interceptor
+            // Không cần làm gì thêm ở đây
+        }
+    }, [user]);
 
     const login = async (credentials: LoginCredentials) => {
         const response: AuthResponse = await authService.login(credentials);
