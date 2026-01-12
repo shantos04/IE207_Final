@@ -34,13 +34,13 @@ export const getInvoices = async (req, res) => {
         console.log('\ud83d\udd0d [getInvoices] Query:', JSON.stringify(query, null, 2));
         console.log('\ud83d\udcc5 [getInvoices] Date Params:', { startDate, endDate });
 
-        // Execute query with pagination
+        // Execute query with pagination (CRITICAL: sort BEFORE pagination)
         const invoices = await Invoice.find(query)
+            .sort({ issueDate: -1, createdAt: -1 }) // Sort by issue date first (newest), then createdAt
             .populate('order', 'orderCode totalPrice status')
             .populate('user', 'fullName email')
-            .limit(limit * 1)
             .skip((page - 1) * limit)
-            .sort({ createdAt: -1 });
+            .limit(limit * 1);
 
         const count = await Invoice.countDocuments(query);
 
