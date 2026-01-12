@@ -140,6 +140,7 @@ export const googleLogin = async (req, res) => {
         }
 
         // === STEP 1: Create/Update User in Users Collection ===
+        // ✅ FIX: ALWAYS update avatar on every login to prevent stale/broken images
         let user = await User.findOne({ email });
 
         if (!user) {
@@ -152,17 +153,18 @@ export const googleLogin = async (req, res) => {
                 email: email,
                 password: randomPassword,
                 username: email.split('@')[0] + Math.random().toString(36).slice(-4),
-                role: 'user',
+                role: 'customer', // ✅ Default to 'customer' for Google sign-ups
                 avatar: picture,
             });
             console.log('✅ User mới đã được tạo:', user.email);
         } else {
-            // Update existing user's profile data
+            // ✅ CRITICAL: Update avatar EVERY login to sync with latest Google profile
             console.log('👉 User đã tồn tại, đang cập nhật thông tin...');
             user.fullName = name;
-            user.avatar = picture;
+            user.avatar = picture; // Always refresh avatar URL from Google
             await user.save();
             console.log('✅ User đã được cập nhật:', user.email);
+            console.log('📸 Avatar URL updated:', picture);
         }
 
         // === STEP 2: Create/Update Customer in Customers Collection (Use Upsert) ===

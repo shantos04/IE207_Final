@@ -75,7 +75,7 @@ export const signup = async (req, res) => {
         } catch (customerError) {
             // ❌ MANUAL ROLLBACK: Customer creation failed, delete the User
             console.error('❌ Customer creation failed, rolling back User:', customerError.message);
-            
+
             if (createdUser && createdUser._id) {
                 await User.findByIdAndDelete(createdUser._id);
                 console.log('🔄 User rolled back (deleted):', createdUser._id);

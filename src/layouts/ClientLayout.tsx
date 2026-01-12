@@ -142,6 +142,11 @@ export default function ClientLayout() {
                                                 <img
                                                     src={user.avatar}
                                                     alt={user.fullName}
+                                                    referrerPolicy="no-referrer"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        e.currentTarget.parentElement!.innerHTML = `<span class="text-white font-medium text-sm">${user.fullName?.charAt(0).toUpperCase()}</span>`;
+                                                    }}
                                                     className="w-full h-full rounded-full object-cover"
                                                 />
                                             ) : (
@@ -162,6 +167,11 @@ export default function ClientLayout() {
                                                             <img
                                                                 src={user.avatar}
                                                                 alt={user.fullName}
+                                                                referrerPolicy="no-referrer"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.style.display = 'none';
+                                                                    e.currentTarget.parentElement!.innerHTML = `<span class="text-white font-semibold text-lg">${user.fullName?.charAt(0).toUpperCase()}</span>`;
+                                                                }}
                                                                 className="w-full h-full rounded-full object-cover"
                                                             />
                                                         ) : (
