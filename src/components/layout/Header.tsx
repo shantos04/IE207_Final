@@ -1,21 +1,16 @@
-import { Search, Bell, Settings, ShoppingCart, AlertTriangle, UserPlus, LogOut, Users, FileText, SettingsIcon, ExternalLink } from 'lucide-react';
+import { Search, Bell, ShoppingCart, AlertTriangle, UserPlus, ExternalLink } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Header() {
     const [showNotifications, setShowNotifications] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
-    const settingsRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
                 setShowNotifications(false);
-            }
-            if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-                setShowSettings(false);
             }
         };
 
@@ -58,11 +53,6 @@ export default function Header() {
     ];
 
     const hasUnreadNotifications = notifications.some(n => n.unread);
-
-    const handleLogout = () => {
-        // Add logout logic here
-        console.log('Đăng xuất');
-    };
 
     return (
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
@@ -155,54 +145,6 @@ export default function Header() {
                                     Xem tất cả thông báo
                                 </button>
                             </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Settings Dropdown */}
-                <div className="relative" ref={settingsRef}>
-                    <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        className="p-2 rounded-full hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-all hover:rotate-90 duration-500"
-                    >
-                        <Settings className="w-6 h-6" />
-                    </button>
-
-                    {showSettings && (
-                        <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 py-2">
-                            <Link
-                                to="/admin/settings/general"
-                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                <SettingsIcon className="w-4 h-4 text-gray-500" />
-                                <span>Cấu hình hệ thống</span>
-                            </Link>
-
-                            <Link
-                                to="/admin/settings/staff"
-                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                <Users className="w-4 h-4 text-gray-500" />
-                                <span>Quản lý nhân viên</span>
-                            </Link>
-
-                            <Link
-                                to="/admin/settings/logs"
-                                className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                <FileText className="w-4 h-4 text-gray-500" />
-                                <span>Nhật ký hoạt động</span>
-                            </Link>
-
-                            <div className="my-2 border-t border-gray-100"></div>
-
-                            <button
-                                onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                <span>Đăng xuất</span>
-                            </button>
                         </div>
                     )}
                 </div>

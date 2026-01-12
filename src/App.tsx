@@ -11,6 +11,7 @@ import ProductsPage from './pages/ProductsPage'
 import OrdersPage from './pages/OrdersPage'
 import CustomersPage from './pages/CustomersPage'
 import InvoicesPage from './pages/InvoicesPage'
+import InvoiceDetailPage from './pages/InvoiceDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import AuthPage from './pages/AuthPage'
@@ -97,6 +98,7 @@ function App() {
                             <Route path="orders" element={<OrdersPage />} />
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="invoices" element={<InvoicesPage />} />
+                            <Route path="invoices/:id" element={<InvoiceDetailPage />} />
                             <Route path="reports" element={<ReportsPage />} />
                             <Route path="settings" element={<SettingsPage />} />
                         </Route>

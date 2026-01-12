@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FileText, Search, Plus, Eye, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar, Filter } from 'lucide-react';
 import { invoiceService, Invoice } from '../services/invoiceService';
 
@@ -11,6 +12,7 @@ const STATUS_MAP: Record<string, string> = {
 };
 
 export default function InvoicesPage() {
+    const navigate = useNavigate();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -470,6 +472,7 @@ export default function InvoicesPage() {
                                             {/* Hành động */}
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <button
+                                                    onClick={() => navigate(`/admin/invoices/${invoice._id}`)}
                                                     className="text-blue-600 hover:text-blue-900 mr-3 inline-flex items-center"
                                                     title="Xem chi tiết"
                                                 >
