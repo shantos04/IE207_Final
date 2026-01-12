@@ -173,7 +173,7 @@ export const createOrder = async (req, res) => {
 
         // Phase 2: All products available, now deduct stock and build order items
         const stockUpdates = [];
-        
+
         for (const item of orderItems) {
             const product = await Product.findById(item.product);
 
@@ -207,19 +207,19 @@ export const createOrder = async (req, res) => {
                     // Use findOneAndUpdate with $inc to atomically decrement stock
                     // Add constraint: only update if stock >= quantity (prevent negative)
                     const result = await Product.findOneAndUpdate(
-                        { 
+                        {
                             _id: update.productId,
                             stock: { $gte: update.quantity } // Ensure stock is sufficient
                         },
                         { $inc: { stock: -update.quantity } },
                         { new: true }
                     );
-                    
+
                     if (!result) {
                         // Stock check failed - concurrent order might have depleted stock
                         throw new Error(`Sản phẩm "${update.productName}" không đủ hàng (race condition)`);
                     }
-                    
+
                     console.log(`📦 [createOrder] Đã trừ ${update.quantity} từ ${update.productName}. Tồn kho mới: ${result.stock}`);
                     return result;
                 })
@@ -294,13 +294,13 @@ export const createOrder = async (req, res) => {
             }
 
             const invoice = await Invoice.create(invoiceData);
-            
+
             console.log(`✅ [createOrder] Đã tự động tạo hóa đơn ${invoice.invoiceNumber} cho đơn hàng ${order.orderCode}`);
         } catch (invoiceError) {
             // Log the error but don't fail the order creation
             console.error("❌ [createOrder] Lỗi tạo hóa đơn tự động:", invoiceError.message);
             console.error("Stack:", invoiceError.stack);
-            
+
             // Optional: You might want to return a warning in response
             // but still consider the order creation successful
         }
@@ -356,11 +356,55 @@ export const updateOrderStatus = async (req, res) => {
 
         // Update timestamp and payment status for Delivered orders
         if (newStatus === 'Delivered') {
+            order.deliveredAt = new Date();
+
             // Mark payment as paid for COD orders when delivered
             if (order.paymentMethod === 'COD' && order.paymentStatus === 'unpaid') {
                 order.paymentStatus = 'paid';
+                order.paidAt = new Date();
                 console.log(`   💰 Đánh dấu đã thanh toán cho đơn COD: ${order.orderCode}`);
             }
+
+            // --- AUTO-GENERATE INVOICE ON DELIVERY (FIX FOR MISSING INVOICES) ---
+            try {
+                // Check if invoice already exists for this order
+                const existingInvoice = await Invoice.findOne({ order: order._id });
+
+                if (!existingInvoice) {
+                    console.log(`🔍 [updateOrderStatus] Không tìm thấy hóa đơn cho đơn hàng ${order.orderCode}. Tạo mới...`);
+
+                    // Create invoice automatically on delivery
+                    const invoiceData = {
+                        user: order.user,
+                        order: order._id,
+                        totalAmount: order.totalAmount,
+                        status: 'Paid', // Mark as Paid since order is delivered
+                        paymentMethod: order.paymentMethod,
+                        issueDate: new Date(),
+                        dueDate: new Date(), // Due date is now since it's already delivered
+                        paidAt: new Date(), // Mark as paid immediately
+                        notes: `Hóa đơn tự động cho đơn hàng ${order.orderCode} (Đã giao hàng)`,
+                    };
+
+                    const newInvoice = await Invoice.create(invoiceData);
+                    console.log(`✅ [updateOrderStatus] Đã tạo hóa đơn ${newInvoice.invoiceNumber} cho đơn hàng ${order.orderCode}`);
+                } else {
+                    console.log(`ℹ️ [updateOrderStatus] Hóa đơn ${existingInvoice.invoiceNumber} đã tồn tại cho đơn hàng ${order.orderCode}`);
+
+                    // Update existing invoice to Paid if it's not already
+                    if (existingInvoice.status !== 'Paid') {
+                        existingInvoice.status = 'Paid';
+                        existingInvoice.paidAt = new Date();
+                        await existingInvoice.save();
+                        console.log(`✅ [updateOrderStatus] Đã cập nhật hóa đơn ${existingInvoice.invoiceNumber} thành Paid`);
+                    }
+                }
+            } catch (invoiceError) {
+                console.error(`❌ [updateOrderStatus] Lỗi khi tạo/cập nhật hóa đơn:`, invoiceError.message);
+                console.error('Stack:', invoiceError.stack);
+                // Don't fail the status update if invoice creation fails
+            }
+            // --- END AUTO-GENERATE INVOICE ---
         }
 
         await order.save();
