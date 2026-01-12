@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Customer from '../models/Customer.js';
 
 // Tạo JWT token
 const generateToken = (userId) => {
@@ -12,6 +13,8 @@ const generateToken = (userId) => {
 // @route   POST /api/auth/signup
 // @access  Public
 export const signup = async (req, res) => {
+    let createdUser = null; // Track created user for manual rollback
+
     try {
         // ⚠️ SECURITY: ONLY extract safe fields from req.body
         // NEVER pass entire req.body to avoid privilege escalation
@@ -34,9 +37,19 @@ export const signup = async (req, res) => {
             });
         }
 
-        // ✅ SECURITY FIX: Force 'customer' role for public registration
+        // Check if customer exists
+        const existingCustomer = await Customer.findOne({ email: email.toLowerCase().trim() });
+        if (existingCustomer) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email đã được đăng ký',
+            });
+        }
+
+        // ✅ STEP 1: Create User document (for authentication)
+        // SECURITY FIX: Force 'customer' role for public registration
         // NEVER trust client-sent role - always override to 'customer'
-        const user = await User.create({
+        createdUser = await User.create({
             fullName: fullName.trim(),
             email: email.toLowerCase().trim(),
             password,
@@ -44,28 +57,57 @@ export const signup = async (req, res) => {
             role: 'customer', // ← FORCED to 'customer' for security
         });
 
+        console.log('✅ User created:', createdUser.email);
+
+        // ✅ STEP 2: Create Customer document (for CRM/Analytics)
+        // Wrap in try-catch for manual rollback if this fails
+        try {
+            await Customer.create({
+                name: fullName.trim(),
+                email: email.toLowerCase().trim(),
+                phone: '0000000000', // Default phone, can be updated later
+                address: '',
+                loyaltyPoints: 0, // New customer starts with 0 points
+                status: 'active',
+            });
+
+            console.log('✅ Customer created:', createdUser.email);
+        } catch (customerError) {
+            // ❌ MANUAL ROLLBACK: Customer creation failed, delete the User
+            console.error('❌ Customer creation failed, rolling back User:', customerError.message);
+            
+            if (createdUser && createdUser._id) {
+                await User.findByIdAndDelete(createdUser._id);
+                console.log('🔄 User rolled back (deleted):', createdUser._id);
+            }
+
+            throw new Error(`Không thể tạo hồ sơ khách hàng: ${customerError.message}`);
+        }
+
+        // ✅ SUCCESS: Both User and Customer created
         // Generate token
-        const token = generateToken(user._id);
+        const token = generateToken(createdUser._id);
 
         res.status(201).json({
             success: true,
             message: 'Đăng ký thành công',
             data: {
                 user: {
-                    _id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    fullName: user.fullName,
-                    role: user.role,
-                    avatar: user.avatar,
+                    _id: createdUser._id,
+                    username: createdUser.username,
+                    email: createdUser.email,
+                    fullName: createdUser.fullName,
+                    role: createdUser.role,
+                    avatar: createdUser.avatar,
                 },
                 accessToken: token,
             },
         });
     } catch (error) {
+        console.error('❌ Registration Error:', error);
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message || 'Đăng ký thất bại',
         });
     }
 };

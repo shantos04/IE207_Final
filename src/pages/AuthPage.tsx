@@ -248,9 +248,8 @@ export default function AuthPage() {
                                         type="email"
                                         autoComplete="email"
                                         {...registerLogin('email')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            loginErrors.email ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${loginErrors.email ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="support@craftui.com"
                                     />
                                 </div>
@@ -271,9 +270,8 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete="current-password"
                                         {...registerLogin('password')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            loginErrors.password ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${loginErrors.password ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nhập mật khẩu..."
                                     />
                                 </div>
@@ -316,9 +314,8 @@ export default function AuthPage() {
                                         type="text"
                                         autoComplete="name"
                                         {...registerSignUp('fullName')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            signUpErrors.fullName ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${signUpErrors.fullName ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nguyễn Văn A"
                                     />
                                 </div>
@@ -346,9 +343,8 @@ export default function AuthPage() {
                                         type="email"
                                         autoComplete="email"
                                         {...registerSignUp('email')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            signUpErrors.email ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${signUpErrors.email ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="example@email.com"
                                     />
                                 </div>
@@ -369,9 +365,8 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete="new-password"
                                         {...registerSignUp('password')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            signUpErrors.password ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${signUpErrors.password ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nhập mật khẩu..."
                                     />
                                 </div>
@@ -392,9 +387,8 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete="new-password"
                                         {...registerSignUp('confirmPassword')}
-                                        className={`w-full pl-11 pr-4 py-3.5 border ${
-                                            signUpErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${signUpErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                                            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nhập lại mật khẩu..."
                                     />
                                 </div>

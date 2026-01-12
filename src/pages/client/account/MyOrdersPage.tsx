@@ -42,7 +42,7 @@ export default function MyOrdersPage() {
 
             if (response.success && response.data) {
                 setOrders(response.data);
-                toast.success(`Đã tải ${response.data.length} đơn hàng`);
+                // Silent load - no toast notification needed for data fetching
             } else {
                 setOrders([]);
             }
