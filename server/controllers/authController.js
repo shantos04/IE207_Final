@@ -13,7 +13,17 @@ const generateToken = (userId) => {
 // @access  Public
 export const signup = async (req, res) => {
     try {
+        // ⚠️ SECURITY: ONLY extract safe fields from req.body
+        // NEVER pass entire req.body to avoid privilege escalation
         const { fullName, email, password, username } = req.body;
+
+        // Validate required fields
+        if (!fullName || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập đầy đủ thông tin',
+            });
+        }
 
         // Check if user exists
         const existingUser = await User.findOne({ $or: [{ email }, { username }] });
@@ -24,13 +34,14 @@ export const signup = async (req, res) => {
             });
         }
 
-        // Create user
+        // ✅ SECURITY FIX: Force 'customer' role for public registration
+        // NEVER trust client-sent role - always override to 'customer'
         const user = await User.create({
-            fullName,
-            email,
+            fullName: fullName.trim(),
+            email: email.toLowerCase().trim(),
             password,
-            username: username || email.split('@')[0],
-            role: 'staff',
+            username: username?.trim() || email.split('@')[0],
+            role: 'customer', // ← FORCED to 'customer' for security
         });
 
         // Generate token

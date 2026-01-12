@@ -16,12 +16,53 @@ const loginSchema = z.object({
 });
 
 const signUpSchema = z.object({
-    fullName: z.string().min(2, 'Tên phải có ít nhất 2 ký tự'),
+    fullName: z
+        .string()
+        .min(3, 'Tên phải có ít nhất 3 ký tự')
+        .refine((val) => {
+            // Check for @ symbol (email indicator)
+            if (val.includes('@')) {
+                return false;
+            }
+            return true;
+        }, {
+            message: 'Vui lòng nhập tên thật, không nhập Email vào đây',
+        })
+        .refine((val) => {
+            // Check for domain patterns (.com, .vn, .net, etc.)
+            if (/\.(com|vn|net|org|edu|gov|io|co)/i.test(val)) {
+                return false;
+            }
+            return true;
+        }, {
+            message: 'Vui lòng nhập tên thật, không nhập Email vào đây',
+        })
+        .refine((val) => {
+            // Only allow letters (including Vietnamese) and spaces
+            // Regex supports all Vietnamese characters
+            const namePattern = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵýỷỹ\s]+$/;
+            return namePattern.test(val);
+        }, {
+            message: 'Tên không được chứa số hoặc ký tự đặc biệt',
+        })
+        .transform((val) => {
+            // Auto-capitalize first letter of each word
+            return val
+                .trim()
+                .split(' ')
+                .filter(word => word.length > 0)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }),
     email: z.string().email('Email không hợp lệ'),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    confirmPassword: z.string().min(6, 'Mật khẩu xác nhận phải có ít nhất 6 ký tự'),
     agreeToTerms: z.boolean().refine((val) => val === true, {
         message: 'Bạn phải đồng ý với điều khoản',
     }),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['confirmPassword'],
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -52,6 +93,7 @@ export default function AuthPage() {
         formState: { errors: signUpErrors, isSubmitting: isSignUpSubmitting },
     } = useForm<SignUpFormData>({
         resolver: zodResolver(signUpSchema),
+        mode: 'onBlur', // ✅ Validate on blur for real-time feedback
     });
 
     /**
@@ -167,7 +209,7 @@ export default function AuthPage() {
     };
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex flex-col lg:flex-row">
             {/* Left Side - Form */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
                 <div className="w-full max-w-md">
@@ -193,7 +235,7 @@ export default function AuthPage() {
 
                     {/* Login Form */}
                     {!isSignUp ? (
-                        <form onSubmit={handleLoginSubmit(onLoginSubmit)} className="space-y-5">
+                        <form onSubmit={handleLoginSubmit(onLoginSubmit)} noValidate className="space-y-5">
                             {/* Email Input */}
                             <div>
                                 <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -206,12 +248,14 @@ export default function AuthPage() {
                                         type="email"
                                         autoComplete="email"
                                         {...registerLogin('email')}
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            loginErrors.email ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="support@craftui.com"
                                     />
                                 </div>
                                 {loginErrors.email && (
-                                    <p className="mt-1 text-sm text-red-500">{loginErrors.email.message}</p>
+                                    <p className="mt-1.5 text-sm text-red-500">{loginErrors.email.message}</p>
                                 )}
                             </div>
 
@@ -227,12 +271,14 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete="current-password"
                                         {...registerLogin('password')}
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            loginErrors.password ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nhập mật khẩu..."
                                     />
                                 </div>
                                 {loginErrors.password && (
-                                    <p className="mt-1 text-sm text-red-500">{loginErrors.password.message}</p>
+                                    <p className="mt-1.5 text-sm text-red-500">{loginErrors.password.message}</p>
                                 )}
                             </div>
 
@@ -240,14 +286,24 @@ export default function AuthPage() {
                             <button
                                 type="submit"
                                 disabled={isLoginSubmitting}
-                                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                             >
-                                {isLoginSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                                {isLoginSubmitting ? (
+                                    <span className="flex items-center justify-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang đăng nhập...
+                                    </span>
+                                ) : (
+                                    'Đăng nhập'
+                                )}
                             </button>
                         </form>
                     ) : (
                         /* Sign Up Form */
-                        <form onSubmit={handleSignUpSubmit(onSignUpSubmit)} className="space-y-5">
+                        <form onSubmit={handleSignUpSubmit(onSignUpSubmit)} noValidate className="space-y-5">
                             {/* Full Name Input */}
                             <div>
                                 <label htmlFor="signup-fullname" className="block text-sm font-medium text-gray-700 mb-2">
@@ -260,12 +316,21 @@ export default function AuthPage() {
                                         type="text"
                                         autoComplete="name"
                                         {...registerSignUp('fullName')}
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                                        placeholder="Craft UI"
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            signUpErrors.fullName ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        placeholder="Nguyễn Văn A"
                                     />
                                 </div>
-                                {signUpErrors.fullName && (
-                                    <p className="mt-1 text-sm text-red-500">{signUpErrors.fullName.message}</p>
+                                {signUpErrors.fullName ? (
+                                    <p className="mt-1.5 text-sm text-red-500 flex items-start gap-1">
+                                        <span className="mt-0.5">⚠️</span>
+                                        <span>{signUpErrors.fullName.message}</span>
+                                    </p>
+                                ) : (
+                                    <p className="mt-1.5 text-xs text-gray-500">
+                                        Chỉ nhập chữ cái, không nhập số hoặc email
+                                    </p>
                                 )}
                             </div>
 
@@ -281,12 +346,14 @@ export default function AuthPage() {
                                         type="email"
                                         autoComplete="email"
                                         {...registerSignUp('email')}
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                                        placeholder="support@craftui.com"
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            signUpErrors.email ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        placeholder="example@email.com"
                                     />
                                 </div>
                                 {signUpErrors.email && (
-                                    <p className="mt-1 text-sm text-red-500">{signUpErrors.email.message}</p>
+                                    <p className="mt-1.5 text-sm text-red-500">{signUpErrors.email.message}</p>
                                 )}
                             </div>
 
@@ -302,38 +369,75 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete="new-password"
                                         {...registerSignUp('password')}
-                                        className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            signUpErrors.password ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                         placeholder="Nhập mật khẩu..."
                                     />
                                 </div>
                                 {signUpErrors.password && (
-                                    <p className="mt-1 text-sm text-red-500">{signUpErrors.password.message}</p>
+                                    <p className="mt-1.5 text-sm text-red-500">{signUpErrors.password.message}</p>
+                                )}
+                            </div>
+
+                            {/* Confirm Password Input - NEW FIELD */}
+                            <div>
+                                <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+                                    Xác nhận mật khẩu
+                                </label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <input
+                                        id="signup-confirm-password"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        {...registerSignUp('confirmPassword')}
+                                        className={`w-full pl-11 pr-4 py-3.5 border ${
+                                            signUpErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                                        placeholder="Nhập lại mật khẩu..."
+                                    />
+                                </div>
+                                {signUpErrors.confirmPassword && (
+                                    <p className="mt-1.5 text-sm text-red-500">{signUpErrors.confirmPassword.message}</p>
                                 )}
                             </div>
 
                             {/* Terms Checkbox */}
-                            <div className="flex items-start">
-                                <input
-                                    id="signup-terms"
-                                    type="checkbox"
-                                    {...registerSignUp('agreeToTerms')}
-                                    className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-                                />
-                                <label htmlFor="signup-terms" className="ml-2 text-sm text-gray-600">
-                                    Tôi đồng ý với điều khoản & điều kiện
-                                </label>
+                            <div>
+                                <div className="flex items-start">
+                                    <input
+                                        id="signup-terms"
+                                        type="checkbox"
+                                        {...registerSignUp('agreeToTerms')}
+                                        className="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 transition-all"
+                                    />
+                                    <label htmlFor="signup-terms" className="ml-2 text-sm text-gray-600">
+                                        Tôi đồng ý với điều khoản & điều kiện
+                                    </label>
+                                </div>
+                                {signUpErrors.agreeToTerms && (
+                                    <p className="mt-1.5 text-sm text-red-500">{signUpErrors.agreeToTerms.message}</p>
+                                )}
                             </div>
-                            {signUpErrors.agreeToTerms && (
-                                <p className="text-sm text-red-500">{signUpErrors.agreeToTerms.message}</p>
-                            )}
 
                             {/* Submit Button */}
                             <button
                                 type="submit"
                                 disabled={isSignUpSubmitting}
-                                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                             >
-                                {isSignUpSubmitting ? 'Đang đăng ký...' : 'Đăng ký'}
+                                {isSignUpSubmitting ? (
+                                    <span className="flex items-center justify-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang đăng ký...
+                                    </span>
+                                ) : (
+                                    'Đăng ký'
+                                )}
                             </button>
                         </form>
                     )}
