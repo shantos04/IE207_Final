@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Building2, User, Lock, Save, Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -11,6 +14,18 @@ import {
 } from '../services/settingService';
 
 type TabType = 'system' | 'profile' | 'password';
+
+// Validation schema for password change
+const passwordChangeSchema = z.object({
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại'),
+    newPassword: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
+    confirmPassword: z.string().min(6, 'Mật khẩu xác nhận phải có ít nhất 6 ký tự'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Mật khẩu xác nhận không khớp',
+    path: ['confirmPassword'],
+});
+
+type PasswordChangeFormData = z.infer<typeof passwordChangeSchema>;
 
 export default function SettingsPage() {
     const { user, updateUser } = useAuth();
@@ -32,10 +47,15 @@ export default function SettingsPage() {
         phone: '',
     });
 
-    const [passwordData, setPasswordData] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+    // React Hook Form for password change
+    const {
+        register: registerPassword,
+        handleSubmit: handlePasswordSubmit,
+        formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
+        reset: resetPasswordForm,
+    } = useForm<PasswordChangeFormData>({
+        resolver: zodResolver(passwordChangeSchema),
+        mode: 'onBlur', // Validate on blur for real-time feedback
     });
 
     // Load system settings
@@ -80,32 +100,18 @@ export default function SettingsPage() {
         }
     };
 
-    const handleChangePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            toast.error('Mật khẩu mới và xác nhận không khớp!');
-            return;
-        }
-
-        if (passwordData.newPassword.length < 6) {
-            toast.error('Mật khẩu mới phải có ít nhất 6 ký tự!');
-            return;
-        }
-
-        setLoading(true);
+    // Password change handler with React Hook Form
+    const onPasswordSubmit = async (data: PasswordChangeFormData) => {
         try {
-            await changePassword(passwordData);
-            toast.success('Đổi mật khẩu thành công!');
-            setPasswordData({
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: '',
+            await changePassword({
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword,
+                confirmPassword: data.confirmPassword,
             });
+            toast.success('Đổi mật khẩu thành công!');
+            resetPasswordForm(); // Clear form after success
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Đổi mật khẩu thất bại!');
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -131,8 +137,8 @@ export default function SettingsPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${activeTab === tab.id
-                                        ? 'bg-primary-50 text-primary-600'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-primary-50 text-primary-600'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <tab.icon className="w-5 h-5" />
@@ -215,72 +221,89 @@ export default function SettingsPage() {
 
                     {/* Password Tab */}
                     {activeTab === 'password' && (
-                        <form onSubmit={handleChangePassword} className="space-y-6 max-w-2xl">
+                        <form
+                            onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+                            noValidate
+                            className="space-y-6 max-w-2xl"
+                        >
+                            {/* Current Password */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                     Mật khẩu hiện tại
                                 </label>
                                 <input
+                                    id="currentPassword"
                                     type="password"
-                                    value={passwordData.currentPassword}
-                                    onChange={(e) =>
-                                        setPasswordData({
-                                            ...passwordData,
-                                            currentPassword: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    autoComplete="current-password"
+                                    {...registerPassword('currentPassword')}
+                                    className={`w-full px-4 py-3.5 border ${passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                     placeholder="Nhập mật khẩu hiện tại"
-                                    required
                                 />
+                                {passwordErrors.currentPassword && (
+                                    <p className="mt-1.5 text-sm text-red-500 flex items-start gap-1">
+                                        <span className="mt-0.5">⚠️</span>
+                                        <span>{passwordErrors.currentPassword.message}</span>
+                                    </p>
+                                )}
                             </div>
 
+                            {/* New Password */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                     Mật khẩu mới
                                 </label>
                                 <input
+                                    id="newPassword"
                                     type="password"
-                                    value={passwordData.newPassword}
-                                    onChange={(e) =>
-                                        setPasswordData({
-                                            ...passwordData,
-                                            newPassword: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    autoComplete="new-password"
+                                    {...registerPassword('newPassword')}
+                                    className={`w-full px-4 py-3.5 border ${passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                     placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                                    required
-                                    minLength={6}
                                 />
+                                {passwordErrors.newPassword ? (
+                                    <p className="mt-1.5 text-sm text-red-500 flex items-start gap-1">
+                                        <span className="mt-0.5">⚠️</span>
+                                        <span>{passwordErrors.newPassword.message}</span>
+                                    </p>
+                                ) : (
+                                    <p className="mt-1.5 text-xs text-gray-500">
+                                        Tối thiểu 6 ký tự
+                                    </p>
+                                )}
                             </div>
 
+                            {/* Confirm New Password */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                     Xác nhận mật khẩu mới
                                 </label>
                                 <input
+                                    id="confirmPassword"
                                     type="password"
-                                    value={passwordData.confirmPassword}
-                                    onChange={(e) =>
-                                        setPasswordData({
-                                            ...passwordData,
-                                            confirmPassword: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                    autoComplete="new-password"
+                                    {...registerPassword('confirmPassword')}
+                                    className={`w-full px-4 py-3.5 border ${passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                                        } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                                     placeholder="Nhập lại mật khẩu mới"
-                                    required
                                 />
+                                {passwordErrors.confirmPassword && (
+                                    <p className="mt-1.5 text-sm text-red-500 flex items-start gap-1">
+                                        <span className="mt-0.5">⚠️</span>
+                                        <span>{passwordErrors.confirmPassword.message}</span>
+                                    </p>
+                                )}
                             </div>
 
+                            {/* Submit Button */}
                             <div className="flex items-center gap-3 pt-4">
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    disabled={isPasswordSubmitting}
+                                    className="flex items-center gap-2 px-6 py-3.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
                                 >
-                                    {loading ? (
+                                    {isPasswordSubmitting ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
                                             <span>Đang xử lý...</span>

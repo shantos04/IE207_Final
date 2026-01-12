@@ -1,6 +1,5 @@
 import Setting from '../models/Setting.js';
 import User from '../models/User.js';
-import bcrypt from 'bcryptjs';
 
 // @desc    Lấy thông tin cấu hình hệ thống
 // @route   GET /api/settings
@@ -118,71 +117,101 @@ export const changePassword = async (req, res) => {
         const { currentPassword, newPassword, confirmPassword } = req.body;
         const userId = req.user._id;
 
-        // Validate input
+        console.log('🔐 Change Password Request:', {
+            userId,
+            hasCurrentPassword: !!currentPassword,
+            hasNewPassword: !!newPassword,
+            hasConfirmPassword: !!confirmPassword,
+        });
+
+        // 1. Validate input
         if (!currentPassword || !newPassword || !confirmPassword) {
+            console.log('❌ Missing fields');
             return res.status(400).json({
                 success: false,
                 message: 'Vui lòng điền đầy đủ thông tin',
             });
         }
 
-        // Check if new password matches confirm password
+        // 2. Check if new password matches confirm password
         if (newPassword !== confirmPassword) {
+            console.log('❌ Password mismatch');
             return res.status(400).json({
                 success: false,
                 message: 'Mật khẩu mới và xác nhận mật khẩu không khớp',
             });
         }
 
-        // Validate new password length
+        // 3. Validate new password length
         if (newPassword.length < 6) {
+            console.log('❌ Password too short');
             return res.status(400).json({
                 success: false,
                 message: 'Mật khẩu mới phải có ít nhất 6 ký tự',
             });
         }
 
-        // Get user with password field
+        // 4. Fetch user with password field (password has select: false in schema)
         const user = await User.findById(userId).select('+password');
 
         if (!user) {
+            console.log('❌ User not found:', userId);
             return res.status(404).json({
                 success: false,
                 message: 'Người dùng không tồn tại',
             });
         }
 
-        // Check if current password is correct
-        const isPasswordCorrect = await bcrypt.compare(
-            currentPassword,
-            user.password
-        );
+        console.log('✅ User found:', user.email);
+        console.log('📋 Has password field:', !!user.password);
+
+        // 5. ✅ CRITICAL: Verify current password
+        if (!user.password) {
+            console.log('❌ CRITICAL: Password field is empty!');
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi hệ thống: không thể lấy mật khẩu hiện tại',
+            });
+        }
+
+        const isPasswordCorrect = await user.comparePassword(currentPassword);
+        console.log('🔍 Current password verification:', isPasswordCorrect);
 
         if (!isPasswordCorrect) {
-            return res.status(401).json({
+            console.log('❌ WRONG current password for user:', user.email);
+            // ✅ FIX: Use 400 instead of 401 to prevent auto-logout
+            // 401 triggers axios interceptor logout, but this is just wrong password
+            return res.status(400).json({
                 success: false,
                 message: 'Mật khẩu hiện tại không đúng',
             });
         }
 
-        // Check if new password is same as current password
-        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        console.log('✅ Current password verified');
+
+        // 6. Check if new password is same as current password (optional but good UX)
+        const isSamePassword = await user.comparePassword(newPassword);
         if (isSamePassword) {
+            console.log('❌ New password same as old');
             return res.status(400).json({
                 success: false,
                 message: 'Mật khẩu mới không được trùng với mật khẩu cũ',
             });
         }
 
-        // Hash new password and save
+        // 7. ✅ Update password - pre('save') hook will hash it automatically
+        console.log('🔄 Updating password...');
         user.password = newPassword;
-        await user.save();
+        await user.save(); // This triggers the pre('save') hook in User model
+
+        console.log('✅ Password changed successfully for user:', user.email);
 
         res.status(200).json({
             success: true,
             message: 'Đổi mật khẩu thành công',
         });
     } catch (error) {
+        console.error('❌ Error changing password:', error);
         res.status(500).json({
             success: false,
             message: 'Lỗi khi đổi mật khẩu',

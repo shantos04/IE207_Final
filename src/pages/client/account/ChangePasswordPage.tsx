@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { changePassword } from '../../../services/settingService';
 
 export default function ChangePasswordPage() {
     const [formData, setFormData] = useState({
@@ -48,11 +49,12 @@ export default function ChangePasswordPage() {
         }
 
         try {
-            // TODO: Call API to change password
-            // await userService.changePassword({
-            //     currentPassword: formData.currentPassword,
-            //     newPassword: formData.newPassword,
-            // });
+            // ✅ FIX: Call real API to change password
+            await changePassword({
+                currentPassword: formData.currentPassword,
+                newPassword: formData.newPassword,
+                confirmPassword: formData.confirmPassword,
+            });
 
             toast.success('Đổi mật khẩu thành công!');
             setFormData({
@@ -60,8 +62,10 @@ export default function ChangePasswordPage() {
                 newPassword: '',
                 confirmPassword: '',
             });
-        } catch (error) {
-            toast.error('Mật khẩu hiện tại không đúng');
+        } catch (error: any) {
+            console.error('❌ Change password error:', error);
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu';
+            toast.error(errorMessage);
         }
     };
 
