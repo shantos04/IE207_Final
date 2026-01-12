@@ -3,6 +3,12 @@ import Customer from '../models/Customer.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -68,6 +74,71 @@ export const updateUserProfile = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message,
+        });
+    }
+};
+
+// @desc    Upload avatar
+// @route   PUT /api/users/profile/avatar
+// @access  Private
+export const uploadUserAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng chọn file ảnh',
+            });
+        }
+
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            // Delete uploaded file if user not found
+            fs.unlinkSync(req.file.path);
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy người dùng',
+            });
+        }
+
+        // Delete old avatar file if it exists and is a local file
+        if (user.avatar && user.avatar.startsWith('/uploads/')) {
+            const oldAvatarPath = path.join(__dirname, '..', user.avatar);
+            if (fs.existsSync(oldAvatarPath)) {
+                try {
+                    fs.unlinkSync(oldAvatarPath);
+                    console.log(`🗑️ Deleted old avatar: ${oldAvatarPath}`);
+                } catch (err) {
+                    console.error('Error deleting old avatar:', err);
+                }
+            }
+        }
+
+        // Update user avatar with new file path
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+        user.avatar = avatarUrl;
+        await user.save();
+
+        console.log(`✅ Avatar updated for user ${user.email}: ${avatarUrl}`);
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật ảnh đại diện thành công',
+            data: {
+                avatar: avatarUrl,
+                fullName: user.fullName,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        // Delete uploaded file on error
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Lỗi khi tải ảnh lên',
         });
     }
 };

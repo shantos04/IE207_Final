@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { User, Mail, Phone, MapPin, Camera } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Camera, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function ProfilePage() {
     const { user, updateUser } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState({
         fullName: user?.fullName || '',
         email: user?.email || '',
@@ -19,6 +24,68 @@ export default function ProfilePage() {
             ...formData,
             [e.target.name]: e.target.value,
         });
+    };
+
+    const handleAvatarClick = () => {
+        if (isEditing && fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Vui lòng chọn file ảnh (JPG, PNG)');
+            return;
+        }
+
+        // Validate file size (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('Kích thước ảnh không được vượt quá 2MB');
+            return;
+        }
+
+        // Show preview immediately (optimistic UI)
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFormData({ ...formData, avatar: reader.result as string });
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to server
+        setUploading(true);
+        const formDataToUpload = new FormData();
+        formDataToUpload.append('avatar', file);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.put(
+                `${API_URL}/users/profile/avatar`,
+                formDataToUpload,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                const newAvatarUrl = response.data.data.avatar;
+                setFormData({ ...formData, avatar: newAvatarUrl });
+                updateUser({ ...user, avatar: newAvatarUrl });
+                toast.success('Cập nhật ảnh đại diện thành công!');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Không thể tải ảnh lên');
+            // Revert to original avatar
+            setFormData({ ...formData, avatar: user?.avatar || '' });
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -70,12 +137,21 @@ export default function ProfilePage() {
 
             {/* Profile Form */}
             <form onSubmit={handleSubmit}>
+                {/* Hidden file input */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                />
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Left: Avatar */}
                     <div className="md:col-span-1">
                         <div className="flex flex-col items-center">
                             <div className="relative">
-                                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+                                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                                     {formData.avatar ? (
                                         <img
                                             src={formData.avatar}
@@ -89,16 +165,32 @@ export default function ProfilePage() {
                                 {isEditing && (
                                     <button
                                         type="button"
-                                        className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition"
+                                        onClick={handleAvatarClick}
+                                        disabled={uploading}
+                                        className={`absolute bottom-0 right-0 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition shadow-lg ${uploading ? 'opacity-50 cursor-not-allowed' : ''
+                                            }`}
                                         aria-label="Đổi ảnh đại diện"
                                     >
-                                        <Camera className="w-5 h-5" />
+                                        {uploading ? (
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <Camera className="w-5 h-5" />
+                                        )}
                                     </button>
                                 )}
                             </div>
                             <p className="text-sm text-gray-500 mt-4 text-center">
-                                {isEditing ? 'Nhấn vào biểu tượng để đổi ảnh' : 'Ảnh đại diện'}
+                                {uploading
+                                    ? 'Đang tải lên...'
+                                    : isEditing
+                                        ? 'Nhấn vào biểu tượng để đổi ảnh'
+                                        : 'Ảnh đại diện'}
                             </p>
+                            {isEditing && (
+                                <p className="text-xs text-gray-400 mt-1 text-center">
+                                    JPG, PNG tối đa 2MB
+                                </p>
+                            )}
                         </div>
                     </div>
 

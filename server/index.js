@@ -4,6 +4,11 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load env vars
 dotenv.config();
@@ -54,6 +59,9 @@ app.use(
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files (for uploaded avatars)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
