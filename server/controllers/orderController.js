@@ -172,14 +172,10 @@ export const createOrder = async (req, res) => {
         }
 
         // Phase 2: All products available, now deduct stock and build order items
+        const stockUpdates = [];
+        
         for (const item of orderItems) {
             const product = await Product.findById(item.product);
-
-            // NEW LOGIC: Deduct stock immediately when order is created (Reserve stock)
-            product.stock -= item.quantity;
-            await product.save();
-
-            console.log(`📦 [createOrder] Đã trừ ${item.quantity} từ ${product.name}. Tồn kho mới: ${product.stock}`);
 
             // 3. Calculate subtotal for each item (Security: use actual DB price)
             const subtotal = product.price * item.quantity;
@@ -192,6 +188,47 @@ export const createOrder = async (req, res) => {
                 quantity: item.quantity,
                 price: product.price, // Use price from database, not from client
                 subtotal: subtotal, // Fix: Add required subtotal field
+            });
+
+            // Prepare stock update operation (will execute in batch)
+            stockUpdates.push({
+                productId: product._id,
+                productName: product.name,
+                quantity: item.quantity,
+                currentStock: product.stock
+            });
+        }
+
+        // CRITICAL FIX: Execute all stock updates in parallel using Promise.all
+        // with constraint to prevent negative stock
+        try {
+            const updateResults = await Promise.all(
+                stockUpdates.map(async (update) => {
+                    // Use findOneAndUpdate with $inc to atomically decrement stock
+                    // Add constraint: only update if stock >= quantity (prevent negative)
+                    const result = await Product.findOneAndUpdate(
+                        { 
+                            _id: update.productId,
+                            stock: { $gte: update.quantity } // Ensure stock is sufficient
+                        },
+                        { $inc: { stock: -update.quantity } },
+                        { new: true }
+                    );
+                    
+                    if (!result) {
+                        // Stock check failed - concurrent order might have depleted stock
+                        throw new Error(`Sản phẩm "${update.productName}" không đủ hàng (race condition)`);
+                    }
+                    
+                    console.log(`📦 [createOrder] Đã trừ ${update.quantity} từ ${update.productName}. Tồn kho mới: ${result.stock}`);
+                    return result;
+                })
+            );
+        } catch (stockError) {
+            console.error('❌ [createOrder] Lỗi khi cập nhật kho:', stockError);
+            return res.status(500).json({
+                success: false,
+                message: stockError.message || 'Lỗi khi cập nhật số lượng tồn kho. Vui lòng thử lại.',
             });
         }
 
@@ -237,23 +274,35 @@ export const createOrder = async (req, res) => {
             createdBy: req.user._id, // Fix: Use _id for consistency
         });
 
-        // --- AUTO GENERATE INVOICE START ---
+        // --- CRITICAL FIX: AUTO GENERATE INVOICE ---
         try {
-            const invoice = new Invoice({
+            const invoiceData = {
                 user: req.user._id,
                 order: order._id,
                 totalAmount: order.totalAmount,
-                status: 'Unpaid',
+                status: paymentMethod === 'COD' ? 'Unpaid' : 'Paid',
                 paymentMethod: order.paymentMethod,
-                issueDate: Date.now(),
+                issueDate: new Date(),
                 dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Hạn thanh toán 7 ngày
                 notes: `Hóa đơn cho đơn hàng ${order.orderCode}`,
-            });
-            await invoice.save();
-            console.log("✅ Đã tự động tạo hóa đơn cho đơn hàng:", order.orderCode);
-        } catch (error) {
-            console.error("⚠ Lỗi tạo hóa đơn tự động:", error);
-            // Không throw error để tránh làm lỗi quy trình đặt hàng chính
+            };
+
+            // If payment is online and successful, mark as paid
+            if (paymentMethod !== 'COD') {
+                invoiceData.status = 'Paid';
+                invoiceData.paidAt = new Date();
+            }
+
+            const invoice = await Invoice.create(invoiceData);
+            
+            console.log(`✅ [createOrder] Đã tự động tạo hóa đơn ${invoice.invoiceNumber} cho đơn hàng ${order.orderCode}`);
+        } catch (invoiceError) {
+            // Log the error but don't fail the order creation
+            console.error("❌ [createOrder] Lỗi tạo hóa đơn tự động:", invoiceError.message);
+            console.error("Stack:", invoiceError.stack);
+            
+            // Optional: You might want to return a warning in response
+            // but still consider the order creation successful
         }
         // --- AUTO GENERATE INVOICE END ---
 

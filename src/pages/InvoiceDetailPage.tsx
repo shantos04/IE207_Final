@@ -16,7 +16,7 @@ export default function InvoiceDetailPage() {
 
     const loadInvoiceDetail = async () => {
         if (!id) return;
-        
+
         try {
             setLoading(true);
             const response = await invoiceService.getInvoiceDetail(id);
