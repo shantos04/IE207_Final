@@ -113,7 +113,7 @@ export default function ReportsPage() {
     const [dateRange, setDateRange] = useState<DateRange>('thisMonth');
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    
+
     // State for the 3 new reports
     const [statusDistribution, setStatusDistribution] = useState<OrderStatusDistribution[]>([]);
     const [productPerformance, setProductPerformance] = useState<ProductSalesPerformance[]>([]);
@@ -137,7 +137,7 @@ export default function ReportsPage() {
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         let startDate: string | undefined;
         let endDate: string | undefined;
 
@@ -189,7 +189,7 @@ export default function ReportsPage() {
             setRevenueByOrder(
                 data.revenueByOrder.length > 0 ? data.revenueByOrder : generateMockRevenueByOrder()
             );
-            
+
             if (silent) {
                 console.log('✅ Reports auto-refreshed successfully');
             }
