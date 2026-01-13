@@ -69,6 +69,7 @@ export const getInvoiceDetail = async (req, res) => {
         const invoice = await Invoice.findById(req.params.id)
             .populate({
                 path: 'order',
+                select: 'orderCode customer shippingAddress paymentMethod status totalAmount orderItems',
                 populate: {
                     path: 'orderItems.product',
                     select: 'name productCode price imageUrl',

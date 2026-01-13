@@ -6,8 +6,37 @@ export interface Invoice {
     order: {
         _id: string;
         orderCode: string;
-        totalPrice: number;
+        totalPrice?: number;
+        totalAmount?: number;
         status: string;
+        customer?: {
+            name: string;
+            email: string;
+            phone: string;
+        };
+        shippingAddress?: {
+            fullName: string;
+            phone: string;
+            address: string;
+            city?: string;
+            district?: string;
+            ward?: string;
+        };
+        paymentMethod?: string;
+        orderItems?: Array<{
+            product: {
+                _id: string;
+                name: string;
+                productCode: string;
+                price: number;
+                imageUrl?: string;
+            };
+            productName: string;
+            productCode: string;
+            quantity: number;
+            price: number;
+            subtotal: number;
+        }>;
     };
     user: {
         _id: string;
