@@ -338,7 +338,7 @@ export default function OrdersPage() {
                         </select>
                     </div>
 
-                    {/* Export & Create Buttons */}
+                    {/* Export Button Only - Create button removed */}
                     <div className="lg:col-span-4 flex gap-2">
                         <button
                             onClick={handleExport}
@@ -346,10 +346,6 @@ export default function OrdersPage() {
                         >
                             <Download className="w-4 h-4 mr-2" />
                             Xuất Excel
-                        </button>
-                        <button className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Tạo đơn hàng
                         </button>
                     </div>
                 </div>

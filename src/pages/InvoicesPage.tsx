@@ -292,10 +292,6 @@ export default function InvoicesPage() {
                             <RefreshCw className={`w-5 h-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                             {refreshing ? 'Đang tải...' : 'Làm mới'}
                         </button>
-                        <button className="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
-                            <Plus className="w-5 h-5 mr-2" />
-                            Tạo hóa đơn
-                        </button>
                     </div>
                 </div>
 
