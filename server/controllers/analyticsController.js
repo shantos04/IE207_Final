@@ -371,6 +371,10 @@ export const getProductSalesPerformance = async (req, res) => {
             }
         }
 
+        // Debug logging
+        console.log('🔍 [getProductSalesPerformance] Match Query:', JSON.stringify(matchQuery, null, 2));
+        console.log('📅 [getProductSalesPerformance] Date Range:', { startDate, endDate });
+
         const productPerformance = await Order.aggregate([
             {
                 $match: matchQuery
@@ -404,6 +408,11 @@ export const getProductSalesPerformance = async (req, res) => {
                 }
             }
         ]);
+
+        console.log(`✅ [getProductSalesPerformance] Found ${productPerformance.length} products`);
+        if (productPerformance.length > 0) {
+            console.log('🔝 Top product:', productPerformance[0]);
+        }
 
         res.json({
             success: true,

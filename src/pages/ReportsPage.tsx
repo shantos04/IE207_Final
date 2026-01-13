@@ -112,6 +112,7 @@ type DateRange = '7days' | 'thisMonth' | 'thisYear';
 export default function ReportsPage() {
     const [dateRange, setDateRange] = useState<DateRange>('thisMonth');
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     
     // State for the 3 new reports
     const [statusDistribution, setStatusDistribution] = useState<OrderStatusDistribution[]>([]);
@@ -122,8 +123,21 @@ export default function ReportsPage() {
         fetchReportsData();
     }, [dateRange]);
 
+    // Auto-refresh every 30 seconds to show new data
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            console.log('🔄 Auto-refreshing reports data...');
+            fetchReportsData(true); // Silent refresh
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(intervalId);
+    }, [dateRange]);
+
     const getDateRangeParams = () => {
         const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
         let startDate: string | undefined;
         let endDate: string | undefined;
 
@@ -132,27 +146,33 @@ export default function ReportsPage() {
                 startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
                     .toISOString()
                     .split('T')[0];
-                endDate = today.toISOString().split('T')[0];
+                endDate = tomorrow.toISOString().split('T')[0]; // Include tomorrow
                 break;
             case 'thisMonth':
                 startDate = new Date(today.getFullYear(), today.getMonth(), 1)
                     .toISOString()
                     .split('T')[0];
-                endDate = today.toISOString().split('T')[0];
+                endDate = tomorrow.toISOString().split('T')[0]; // Include tomorrow
                 break;
             case 'thisYear':
                 startDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
-                endDate = today.toISOString().split('T')[0];
+                endDate = tomorrow.toISOString().split('T')[0]; // Include tomorrow
                 break;
         }
 
+        console.log('📅 [getDateRangeParams] Date range:', { startDate, endDate, dateRange });
         return { startDate, endDate };
     };
 
-    const fetchReportsData = async () => {
-        setLoading(true);
+    const fetchReportsData = async (silent = false) => {
+        if (!silent) {
+            setLoading(true);
+        } else {
+            setRefreshing(true);
+        }
         try {
             const params = getDateRangeParams();
+            console.log('📊 Fetching reports with params:', params);
             const data = await getAllReports({ ...params, limit: 10 });
 
             // Use real data or fallback to mock data
@@ -169,6 +189,10 @@ export default function ReportsPage() {
             setRevenueByOrder(
                 data.revenueByOrder.length > 0 ? data.revenueByOrder : generateMockRevenueByOrder()
             );
+            
+            if (silent) {
+                console.log('✅ Reports auto-refreshed successfully');
+            }
         } catch (error) {
             console.error('Error fetching reports:', error);
             // Fallback to mock data on error
@@ -176,7 +200,11 @@ export default function ReportsPage() {
             setProductPerformance(generateMockProductPerformance());
             setRevenueByOrder(generateMockRevenueByOrder());
         } finally {
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            } else {
+                setRefreshing(false);
+            }
         }
     };
 
@@ -231,6 +259,17 @@ export default function ReportsPage() {
                     </p>
                 </div>
                 <div className="flex gap-3">
+                    {/* Manual Refresh Button */}
+                    <button
+                        onClick={() => fetchReportsData()}
+                        disabled={refreshing}
+                        className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Làm mới dữ liệu"
+                    >
+                        <TrendingUp className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        {refreshing ? 'Đang tải...' : 'Làm mới'}
+                    </button>
+
                     {/* Date Range Selector */}
                     <div className="relative">
                         <select
