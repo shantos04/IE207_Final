@@ -360,7 +360,7 @@ export const updateOrderStatus = async (req, res) => {
         // ========== ROBUST INVOICE AUTO-CREATION TRIGGER (PARTIAL MATCHING) ==========
         // Normalize status for comparison (case-insensitive, trim whitespace)
         const normalizedStatus = newStatus.toLowerCase().trim();
-        
+
         // Define key success/delivered keywords for PARTIAL matching
         // These keywords will match if they appear ANYWHERE in the status string
         const deliveredKeywords = [

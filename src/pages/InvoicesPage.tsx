@@ -85,17 +85,17 @@ export default function InvoicesPage() {
     const handleRefresh = async () => {
         try {
             setRefreshing(true);
-            
+
             // HARD RESET: Clear all filters and pagination
             setSearchTerm('');
             setStartDate('');
             setEndDate('');
             setStatusFilter('');
             setCurrentPage(1);
-            
+
             // Refetch with clean state
             const response = await invoiceService.getInvoices({ page: 1, limit });
-            
+
             if (response.success) {
                 setInvoices(response.data);
                 setTotalPages(response.pagination.pages);
@@ -267,7 +267,7 @@ export default function InvoicesPage() {
                         <p className="text-sm text-gray-500 mt-1">Theo dõi và quản lý hóa đơn thanh toán</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button 
+                        <button
                             onClick={handleRefresh}
                             disabled={refreshing}
                             className="inline-flex items-center px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-blue-400 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
