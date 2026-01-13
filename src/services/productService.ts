@@ -22,6 +22,12 @@ export interface ProductFilters {
 }
 
 export const productService = {
+    // Lấy gợi ý sản phẩm cho autocomplete
+    getSuggestions: async (query: string) => {
+        const response = await api.get(`/products/suggestions?query=${encodeURIComponent(query)}`);
+        return response.data;
+    },
+
     // Lấy danh sách sản phẩm với phân trang và lọc
     getProducts: async (filters?: ProductFilters) => {
         const params = new URLSearchParams();

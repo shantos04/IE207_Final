@@ -326,8 +326,9 @@ export const updateOrderStatus = async (req, res) => {
     try {
         const { status } = req.body;
 
-        // Validate status
-        const validStatuses = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+        // Validate status - support both English and Vietnamese
+        const validStatuses = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled',
+            'Chờ xử lý', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy'];
         if (!validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
@@ -348,30 +349,38 @@ export const updateOrderStatus = async (req, res) => {
         const oldStatus = order.status;
         const newStatus = status;
 
-        // REMOVED: Stock deduction logic (now handled in createOrder)
-        // Stock is already deducted when order is created, no need to deduct again
+        console.log(`📦 [updateOrderStatus] Cập nhật đơn hàng ${order.orderCode}: ${oldStatus} → ${newStatus}`);
 
         // Update order status
         order.status = newStatus;
 
-        // Update timestamp and payment status for Delivered orders
-        if (newStatus === 'Delivered') {
-            order.deliveredAt = new Date();
+        // Check if status is Delivered or Completed (both English and Vietnamese)
+        const isDelivered = ['Delivered', 'Đã giao', 'Completed', 'Hoàn thành'].includes(newStatus);
+
+        if (isDelivered) {
+            console.log(`✅ [updateOrderStatus] Đơn hàng ${order.orderCode} đã được giao/hoàn thành`);
+
+            // Update delivery timestamp
+            if (!order.deliveredAt) {
+                order.deliveredAt = new Date();
+            }
 
             // Mark payment as paid for COD orders when delivered
             if (order.paymentMethod === 'COD' && order.paymentStatus === 'unpaid') {
                 order.paymentStatus = 'paid';
                 order.paidAt = new Date();
-                console.log(`   💰 Đánh dấu đã thanh toán cho đơn COD: ${order.orderCode}`);
+                console.log(`💰 [updateOrderStatus] Đánh dấu đã thanh toán cho đơn COD: ${order.orderCode}`);
             }
 
-            // --- AUTO-GENERATE INVOICE ON DELIVERY (FIX FOR MISSING INVOICES) ---
+            // --- AUTO-GENERATE INVOICE ON DELIVERY ---
             try {
+                console.log(`🔍 [updateOrderStatus] Kiểm tra hóa đơn cho đơn hàng ${order.orderCode}...`);
+
                 // Check if invoice already exists for this order
                 const existingInvoice = await Invoice.findOne({ order: order._id });
 
                 if (!existingInvoice) {
-                    console.log(`🔍 [updateOrderStatus] Không tìm thấy hóa đơn cho đơn hàng ${order.orderCode}. Tạo mới...`);
+                    console.log(`📝 [updateOrderStatus] Không tìm thấy hóa đơn. Tạo hóa đơn mới...`);
 
                     // Create invoice automatically on delivery
                     const invoiceData = {
@@ -379,39 +388,48 @@ export const updateOrderStatus = async (req, res) => {
                         order: order._id,
                         totalAmount: order.totalAmount,
                         status: 'Paid', // Mark as Paid since order is delivered
-                        paymentMethod: order.paymentMethod,
+                        paymentMethod: order.paymentMethod || 'COD',
                         issueDate: new Date(),
                         dueDate: new Date(), // Due date is now since it's already delivered
                         paidAt: new Date(), // Mark as paid immediately
-                        notes: `Hóa đơn tự động cho đơn hàng ${order.orderCode} (Đã giao hàng)`,
+                        notes: `Hóa đơn tự động cho đơn hàng ${order.orderCode} (Đã giao hàng thành công)`,
                     };
 
                     const newInvoice = await Invoice.create(invoiceData);
                     console.log(`✅ [updateOrderStatus] Đã tạo hóa đơn ${newInvoice.invoiceNumber} cho đơn hàng ${order.orderCode}`);
+                    console.log(`   💵 Số tiền: ${newInvoice.totalAmount.toLocaleString('vi-VN')}đ`);
                 } else {
-                    console.log(`ℹ️ [updateOrderStatus] Hóa đơn ${existingInvoice.invoiceNumber} đã tồn tại cho đơn hàng ${order.orderCode}`);
+                    console.log(`ℹ️ [updateOrderStatus] Hóa đơn ${existingInvoice.invoiceNumber} đã tồn tại`);
 
                     // Update existing invoice to Paid if it's not already
                     if (existingInvoice.status !== 'Paid') {
                         existingInvoice.status = 'Paid';
-                        existingInvoice.paidAt = new Date();
+                        if (!existingInvoice.paidAt) {
+                            existingInvoice.paidAt = new Date();
+                        }
                         await existingInvoice.save();
                         console.log(`✅ [updateOrderStatus] Đã cập nhật hóa đơn ${existingInvoice.invoiceNumber} thành Paid`);
+                    } else {
+                        console.log(`   ✔️ Hóa đơn đã được thanh toán trước đó`);
                     }
                 }
             } catch (invoiceError) {
-                console.error(`❌ [updateOrderStatus] Lỗi khi tạo/cập nhật hóa đơn:`, invoiceError.message);
+                console.error(`❌ [updateOrderStatus] LỖI khi tạo/cập nhật hóa đơn:`, invoiceError.message);
                 console.error('Stack:', invoiceError.stack);
-                // Don't fail the status update if invoice creation fails
+                // Don't fail the status update if invoice creation fails - but log it prominently
+                console.error('⚠️ ĐƠN HÀNG ĐÃ CẬP NHẬT NHƯNG HÓA ĐƠN CHƯA ĐƯỢC TẠO!');
             }
             // --- END AUTO-GENERATE INVOICE ---
         }
 
+        // Save order
         await order.save();
 
         // Populate order data for response
         await order.populate('orderItems.product', 'name productCode imageUrl stock');
         await order.populate('user', 'fullName email');
+
+        console.log(`✅ [updateOrderStatus] Hoàn tất cập nhật đơn hàng ${order.orderCode}`);
 
         res.status(200).json({
             success: true,
@@ -419,7 +437,7 @@ export const updateOrderStatus = async (req, res) => {
             data: order,
         });
     } catch (error) {
-        console.error('❌ [updateOrderStatus] Lỗi:', error.message);
+        console.error('❌ [updateOrderStatus] LỖI:', error.message);
         console.error('Stack trace:', error.stack);
 
         // Return appropriate error status

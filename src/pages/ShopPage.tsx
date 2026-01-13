@@ -19,6 +19,7 @@ export default function ShopPage() {
     const [loading, setLoading] = useState(true);
     const [sortBy, setSortBy] = useState('newest');
     const [currentPage, setCurrentPage] = useState(1);
+    const [isSearchMode, setIsSearchMode] = useState(false);
     const productsPerPage = 12;
     const { addToCart } = useCart();
 
@@ -40,26 +41,39 @@ export default function ShopPage() {
         { id: 'bo-mach', name: 'Bo mạch phát triển' },
     ];
 
-    // Fetch products on mount
+    // Main effect: Fetch products based on URL params (keyword or normal)
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        const keyword = searchParams.get('keyword');
+        const category = searchParams.get('category');
+
+        if (keyword) {
+            // Search mode - fetch by keyword
+            setIsSearchMode(true);
+            // Clear filters when searching
+            setFilters({
+                categories: [],
+                minPrice: 0,
+                maxPrice: 10000000,
+                minRating: 0,
+            });
+            fetchProductsByKeyword(keyword);
+        } else {
+            // Normal mode - fetch all and apply filters
+            setIsSearchMode(false);
+            if (category && !filters.categories.includes(category)) {
+                setFilters(prev => ({
+                    ...prev,
+                    categories: [category],
+                }));
+            }
+            fetchProducts();
+        }
+    }, [searchParams]);
 
     // Apply filters and sorting when products or filters change
     useEffect(() => {
         applyFiltersAndSort();
-    }, [products, filters, sortBy]);
-
-    // Check URL params for category filter
-    useEffect(() => {
-        const category = searchParams.get('category');
-        if (category && !filters.categories.includes(category)) {
-            setFilters(prev => ({
-                ...prev,
-                categories: [category],
-            }));
-        }
-    }, [searchParams]);
+    }, [products, filters, sortBy, isSearchMode]);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -74,27 +88,46 @@ export default function ShopPage() {
         }
     };
 
+    const fetchProductsByKeyword = async (keyword: string) => {
+        setLoading(true);
+        try {
+            const response = await productService.getProducts({ limit: 100, search: keyword });
+            setProducts(response.data || []);
+            if (response.data && response.data.length === 0) {
+                toast.info(`Không tìm thấy sản phẩm nào với từ khóa "${keyword}"`);
+            }
+        } catch (error) {
+            console.error('Failed to search products:', error);
+            toast.error('Không thể tìm kiếm sản phẩm');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const applyFiltersAndSort = () => {
         let result = [...products];
 
-        // Category filter
-        if (filters.categories.length > 0) {
+        // Skip filtering if in search mode (keyword search already filtered by backend)
+        if (!isSearchMode) {
+            // Category filter
+            if (filters.categories.length > 0) {
+                result = result.filter(p =>
+                    filters.categories.some(cat =>
+                        p.category?.toLowerCase().includes(cat.toLowerCase()) ||
+                        p.name?.toLowerCase().includes(cat.toLowerCase())
+                    )
+                );
+            }
+
+            // Price filter
             result = result.filter(p =>
-                filters.categories.some(cat =>
-                    p.category?.toLowerCase().includes(cat.toLowerCase()) ||
-                    p.name?.toLowerCase().includes(cat.toLowerCase())
-                )
+                p.price >= filters.minPrice && p.price <= filters.maxPrice
             );
-        }
 
-        // Price filter
-        result = result.filter(p =>
-            p.price >= filters.minPrice && p.price <= filters.maxPrice
-        );
-
-        // Rating filter (mock - using random rating for demo)
-        if (filters.minRating > 0) {
-            result = result.filter(() => Math.random() > 0.3); // 70% pass
+            // Rating filter (mock - using random rating for demo)
+            if (filters.minRating > 0) {
+                result = result.filter(() => Math.random() > 0.3); // 70% pass
+            }
         }
 
         // Sorting

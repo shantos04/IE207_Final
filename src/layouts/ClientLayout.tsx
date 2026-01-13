@@ -57,7 +57,8 @@ export default function ClientLayout() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
+            navigate(`/shop?keyword=${encodeURIComponent(searchQuery)}`);
+            setSearchQuery(''); // Clear search after submitting
         }
     };
 

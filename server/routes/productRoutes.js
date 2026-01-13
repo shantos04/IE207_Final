@@ -5,12 +5,14 @@ import {
     createProduct,
     updateProduct,
     deleteProduct,
+    getSuggestions,
 } from '../controllers/productController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // GET routes - public access
+router.get('/suggestions', getSuggestions);
 router.get('/', getProducts);
 router.get('/:id', getProduct);
 

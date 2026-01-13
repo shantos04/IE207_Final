@@ -1,21 +1,59 @@
 import Product from '../models/Product.js';
 
+// @desc    Get product suggestions for autocomplete
+// @route   GET /api/products/suggestions
+// @access  Public
+export const getSuggestions = async (req, res) => {
+    try {
+        const { query } = req.query;
+
+        if (!query || query.trim().length < 2) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+            });
+        }
+
+        // Find products matching the query (case-insensitive)
+        const suggestions = await Product.find({
+            isActive: true,
+            name: { $regex: query, $options: 'i' },
+        })
+            .select('_id name')
+            .limit(5)
+            .lean();
+
+        res.status(200).json({
+            success: true,
+            data: suggestions,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Private
 export const getProducts = async (req, res) => {
     try {
-        const { page = 1, limit = 10, category, status, search } = req.query;
+        const { page = 1, limit = 10, category, status, search, keyword } = req.query;
 
         // Build query
         const query = { isActive: true };
 
         if (category) query.category = category;
         if (status) query.status = status;
-        if (search) {
+
+        // Support both 'search' and 'keyword' parameters
+        const searchTerm = keyword || search;
+        if (searchTerm) {
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { productCode: { $regex: search, $options: 'i' } },
+                { name: { $regex: searchTerm, $options: 'i' } },
+                { productCode: { $regex: searchTerm, $options: 'i' } },
             ];
         }
 
