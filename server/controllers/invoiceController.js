@@ -282,3 +282,108 @@ export const cancelInvoice = async (req, res) => {
         });
     }
 };
+
+// @desc    Sync missing invoices for delivered orders (Data Migration)
+// @route   POST /api/invoices/sync-missing
+// @access  Public (temporary endpoint for data migration)
+export const syncMissingInvoices = async (req, res) => {
+    try {
+        console.log('\n🔄 [syncMissingInvoices] Starting invoice sync for delivered orders...');
+
+        // Find ALL delivered orders (support both English and Vietnamese status)
+        const deliveredOrders = await Order.find({
+            status: { $in: ['Delivered', 'Đã giao', 'Completed', 'Hoàn thành'] }
+        })
+            .populate('user', 'fullName email')
+            .sort({ deliveredAt: 1 }); // Oldest first
+
+        console.log(`📦 [syncMissingInvoices] Found ${deliveredOrders.length} delivered orders`);
+
+        let createdCount = 0;
+        let alreadyExistsCount = 0;
+        let errorCount = 0;
+        const createdInvoices = [];
+        const errors = [];
+
+        // Iterate through each delivered order
+        for (const order of deliveredOrders) {
+            try {
+                // Check if invoice already exists
+                const existingInvoice = await Invoice.findOne({ order: order._id });
+
+                if (existingInvoice) {
+                    console.log(`   ✅ Order ${order.orderCode}: Invoice ${existingInvoice.invoiceNumber} already exists`);
+                    alreadyExistsCount++;
+                    continue;
+                }
+
+                // Create missing invoice
+                console.log(`   📝 Order ${order.orderCode}: Creating invoice...`);
+
+                const invoiceData = {
+                    user: order.user._id || order.user,
+                    order: order._id,
+                    totalAmount: order.totalAmount,
+                    status: 'Paid', // Mark as paid since order is delivered
+                    paymentMethod: order.paymentMethod || 'COD',
+                    issueDate: order.deliveredAt || order.updatedAt || new Date(),
+                    dueDate: order.deliveredAt || order.updatedAt || new Date(),
+                    paidAt: order.paidAt || order.deliveredAt || new Date(),
+                    notes: `Hóa đơn tự động đồng bộ cho đơn hàng ${order.orderCode} (Đã giao hàng)`,
+                };
+
+                const newInvoice = await Invoice.create(invoiceData);
+
+                console.log(`   ✅ Order ${order.orderCode}: Created invoice ${newInvoice.invoiceNumber}`);
+                console.log(`      💵 Amount: ${newInvoice.totalAmount.toLocaleString('vi-VN')}đ`);
+                console.log(`      📅 Issue Date: ${newInvoice.issueDate.toLocaleDateString('vi-VN')}`);
+
+                createdCount++;
+                createdInvoices.push({
+                    orderCode: order.orderCode,
+                    invoiceNumber: newInvoice.invoiceNumber,
+                    totalAmount: newInvoice.totalAmount,
+                    issueDate: newInvoice.issueDate,
+                });
+
+            } catch (orderError) {
+                console.error(`   ❌ Order ${order.orderCode}: Error creating invoice:`, orderError.message);
+                errorCount++;
+                errors.push({
+                    orderCode: order.orderCode,
+                    orderId: order._id,
+                    error: orderError.message,
+                });
+            }
+        }
+
+        console.log('\n📊 [syncMissingInvoices] Sync Summary:');
+        console.log(`   Total Delivered Orders: ${deliveredOrders.length}`);
+        console.log(`   ✅ Invoices Created: ${createdCount}`);
+        console.log(`   ℹ️ Already Had Invoices: ${alreadyExistsCount}`);
+        console.log(`   ❌ Errors: ${errorCount}`);
+        console.log('\n✅ [syncMissingInvoices] Sync complete!\n');
+
+        res.status(200).json({
+            success: true,
+            message: `Sync complete. Created ${createdCount} invoices for delivered orders.`,
+            summary: {
+                totalDeliveredOrders: deliveredOrders.length,
+                createdCount,
+                alreadyExistsCount,
+                errorCount,
+            },
+            createdInvoices,
+            errors: errorCount > 0 ? errors : undefined,
+        });
+
+    } catch (error) {
+        console.error('\n❌ [syncMissingInvoices] Fatal Error:', error.message);
+        console.error('Stack:', error.stack);
+
+        res.status(500).json({
+            success: false,
+            message: 'Error during invoice sync: ' + error.message,
+        });
+    }
+};

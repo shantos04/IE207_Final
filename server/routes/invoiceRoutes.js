@@ -6,6 +6,7 @@ import {
     markAsPaid,
     updateInvoiceStatus,
     cancelInvoice,
+    syncMissingInvoices,
 } from '../controllers/invoiceController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -13,6 +14,9 @@ const router = express.Router();
 
 // Tạm thời comment protect để test - bỏ comment khi production
 // router.use(protect);
+
+// Data Migration Endpoint (Temporary - for syncing historical data)
+router.post('/sync-missing', syncMissingInvoices);
 
 // Public routes for testing
 router.route('/').get(getInvoices).post(createInvoice);

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Plus, Eye, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar, Filter } from 'lucide-react';
+import { FileText, Search, Plus, Eye, CheckCircle, XCircle, ChevronLeft, ChevronRight, Calendar, Filter, RefreshCw } from 'lucide-react';
 import { invoiceService, Invoice } from '../services/invoiceService';
+import toast from 'react-hot-toast';
 
 // Status mapping for Vietnamese translation
 const STATUS_MAP: Record<string, string> = {
@@ -15,6 +16,7 @@ export default function InvoicesPage() {
     const navigate = useNavigate();
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState<string>('');
@@ -25,6 +27,16 @@ export default function InvoicesPage() {
 
     useEffect(() => {
         fetchInvoices();
+    }, [currentPage, statusFilter, limit, startDate, endDate]);
+
+    // Auto-refresh every 30 seconds to show new invoices
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            console.log('🔄 Auto-refreshing invoices...');
+            fetchInvoices();
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(intervalId);
     }, [currentPage, statusFilter, limit, startDate, endDate]);
 
     // Reset to page 1 when filters change
@@ -67,6 +79,32 @@ export default function InvoicesPage() {
             console.error('Error fetching invoices:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRefresh = async () => {
+        try {
+            setRefreshing(true);
+            
+            // HARD RESET: Clear all filters and pagination
+            setSearchTerm('');
+            setStartDate('');
+            setEndDate('');
+            setStatusFilter('');
+            setCurrentPage(1);
+            
+            // Refetch with clean state
+            const response = await invoiceService.getInvoices({ page: 1, limit });
+            
+            if (response.success) {
+                setInvoices(response.data);
+                setTotalPages(response.pagination.pages);
+                toast.success('Đã làm mới và reset tất cả bộ lọc!');
+            }
+        } catch (err) {
+            toast.error('Không thể làm mới dữ liệu');
+        } finally {
+            setRefreshing(false);
         }
     };
 
@@ -228,10 +266,21 @@ export default function InvoicesPage() {
                         <h1 className="text-2xl font-bold text-gray-900">Quản lý Hóa đơn</h1>
                         <p className="text-sm text-gray-500 mt-1">Theo dõi và quản lý hóa đơn thanh toán</p>
                     </div>
-                    <button className="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
-                        <Plus className="w-5 h-5 mr-2" />
-                        Tạo hóa đơn
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                            className="inline-flex items-center px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-blue-400 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Làm mới danh sách"
+                        >
+                            <RefreshCw className={`w-5 h-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                            {refreshing ? 'Đang tải...' : 'Làm mới'}
+                        </button>
+                        <button className="inline-flex items-center px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+                            <Plus className="w-5 h-5 mr-2" />
+                            Tạo hóa đơn
+                        </button>
+                    </div>
                 </div>
 
                 {/* Active Filters Display */}

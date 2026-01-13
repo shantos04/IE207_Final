@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Sync - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .summary {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .summary-value {
+            color: #666;
+        }
+
+        .invoice-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .invoice-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .endpoint-info {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .endpoint-info strong {
+            color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Invoice Sync Tool</h1>
+        <p class="subtitle">Data Migration: Sync missing invoices for delivered orders</p>
+
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> This is a one-time data migration tool. 
+            It will create invoices for all delivered orders that don't have one yet.
+        </div>
+
+        <div class="endpoint-info">
+            <strong>Endpoint:</strong> POST http://localhost:5000/api/invoices/sync-missing
+        </div>
+
+        <button id="syncBtn" onclick="syncInvoices()">
+            🚀 Start Invoice Sync
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Syncing invoices... Please wait...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/invoices/sync-missing';
+
+        async function syncInvoices() {
+            const btn = document.getElementById('syncBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+
+            // Disable button and show loading
+            btn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                loading.style.display = 'none';
+                result.style.display = 'block';
+
+                if (data.success) {
+                    result.className = 'result success';
+                    result.innerHTML = `
+                        <h3>✅ Sync Successful!</h3>
+                        <p>${data.message}</p>
+                        
+                        <div class="summary">
+                            <div class="summary-item">
+                                <span class="summary-label">📦 Total Delivered Orders:</span>
+                                <span class="summary-value">${data.summary.totalDeliveredOrders}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">✅ Invoices Created:</span>
+                                <span class="summary-value">${data.summary.createdCount}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">ℹ️ Already Had Invoices:</span>
+                                <span class="summary-value">${data.summary.alreadyExistsCount}</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">❌ Errors:</span>
+                                <span class="summary-value">${data.summary.errorCount}</span>
+                            </div>
+                        </div>
+
+                        ${data.createdInvoices && data.createdInvoices.length > 0 ? `
+                            <h4 style="margin-top: 20px; margin-bottom: 10px;">Created Invoices:</h4>
+                            <div class="invoice-list">
+                                ${data.createdInvoices.map(inv => `
+                                    <div class="invoice-item">
+                                        <div><strong>Order:</strong> ${inv.orderCode}</div>
+                                        <div><strong>Invoice:</strong> ${inv.invoiceNumber}</div>
+                                        <div><strong>Amount:</strong> ${inv.totalAmount.toLocaleString('vi-VN')}đ</div>
+                                        <div><strong>Date:</strong> ${new Date(inv.issueDate).toLocaleDateString('vi-VN')}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${data.errors && data.errors.length > 0 ? `
+                            <h4 style="margin-top: 20px; margin-bottom: 10px; color: #dc3545;">Errors:</h4>
+                            <div class="invoice-list">
+                                ${data.errors.map(err => `
+                                    <div class="invoice-item" style="border-left: 3px solid #dc3545;">
+                                        <div><strong>Order:</strong> ${err.orderCode}</div>
+                                        <div><strong>Error:</strong> ${err.error}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    result.className = 'result error';
+                    result.innerHTML = `
+                        <h3>❌ Sync Failed</h3>
+                        <p>${data.message}</p>
+                    `;
+                }
+
+            } catch (error) {
+                loading.style.display = 'none';
+                result.style.display = 'block';
+                result.className = 'result error';
+                result.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p>Failed to connect to the server. Make sure the backend is running on http://localhost:5000</p>
+                    <p style="margin-top: 10px; font-family: monospace; font-size: 12px;">Error: ${error.message}</p>
+                `;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

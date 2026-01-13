@@ -326,6 +326,9 @@ export const updateOrderStatus = async (req, res) => {
     try {
         const { status } = req.body;
 
+        // Log the exact incoming status for debugging
+        console.log(`📥 [updateOrderStatus] Received status: "${status}" (type: ${typeof status})`);
+
         // Validate status - support both English and Vietnamese
         const validStatuses = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled',
             'Chờ xử lý', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy'];
@@ -349,16 +352,43 @@ export const updateOrderStatus = async (req, res) => {
         const oldStatus = order.status;
         const newStatus = status;
 
-        console.log(`📦 [updateOrderStatus] Cập nhật đơn hàng ${order.orderCode}: ${oldStatus} → ${newStatus}`);
+        console.log(`📦 [updateOrderStatus] Cập nhật đơn hàng ${order.orderCode}: "${oldStatus}" → "${newStatus}"`);
 
         // Update order status
         order.status = newStatus;
 
-        // Check if status is Delivered or Completed (both English and Vietnamese)
-        const isDelivered = ['Delivered', 'Đã giao', 'Completed', 'Hoàn thành'].includes(newStatus);
+        // ========== ROBUST INVOICE AUTO-CREATION TRIGGER (PARTIAL MATCHING) ==========
+        // Normalize status for comparison (case-insensitive, trim whitespace)
+        const normalizedStatus = newStatus.toLowerCase().trim();
+        
+        // Define key success/delivered keywords for PARTIAL matching
+        // These keywords will match if they appear ANYWHERE in the status string
+        const deliveredKeywords = [
+            'giao thành công',    // Vietnamese: "delivered successfully"
+            'delivered',          // English
+            'đã giao',            // Vietnamese: "delivered"
+            'da giao',            // Vietnamese without diacritics
+            'completed',          // English alternative
+            'hoàn thành',         // Vietnamese: "completed"
+            'hoan thanh',         // Vietnamese without diacritics
+            'thành công',         // Vietnamese: "success"
+            'thanh cong',         // Vietnamese without diacritics
+            'success',            // Alternative English
+            'finished',           // Alternative English
+            'done',               // Alternative English
+            'paid'                // Sometimes used to indicate completion
+        ];
+
+        // Use PARTIAL matching: Check if status CONTAINS any of these keywords
+        // This will match "Đã giao thành công", "Delivered successfully", etc.
+        const isDelivered = deliveredKeywords.some(keyword => normalizedStatus.includes(keyword));
+
+        console.log(`🔍 [updateOrderStatus] Normalized status: "${normalizedStatus}"`);
+        console.log(`🔍 [updateOrderStatus] Checking for keywords: ${deliveredKeywords.slice(0, 5).join(', ')}...`);
+        console.log(`🔍 [updateOrderStatus] Is delivered/completed? ${isDelivered}`);
 
         if (isDelivered) {
-            console.log(`✅ [updateOrderStatus] Đơn hàng ${order.orderCode} đã được giao/hoàn thành`);
+            console.log(`✅ [updateOrderStatus] TRIGGER: Đơn hàng ${order.orderCode} đã được giao/hoàn thành`);
 
             // Update delivery timestamp
             if (!order.deliveredAt) {
