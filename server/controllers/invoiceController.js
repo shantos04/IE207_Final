@@ -320,14 +320,30 @@ export const syncMissingInvoices = async (req, res) => {
                 // Create missing invoice
                 console.log(`   📝 Order ${order.orderCode}: Creating invoice...`);
 
+                // Generate invoice number explicitly to avoid race conditions
+                const issueDate = order.deliveredAt || order.updatedAt || new Date();
+                const year = issueDate.getFullYear();
+                const month = String(issueDate.getMonth() + 1).padStart(2, '0');
+
+                // Count existing invoices in the same month
+                const count = await Invoice.countDocuments({
+                    createdAt: {
+                        $gte: new Date(year, issueDate.getMonth(), 1),
+                        $lt: new Date(year, issueDate.getMonth() + 1, 1),
+                    },
+                });
+
+                const invoiceNumber = `INV-${year}${month}-${String(count + 1).padStart(4, '0')}`;
+
                 const invoiceData = {
+                    invoiceNumber,
                     user: order.user._id || order.user,
                     order: order._id,
                     totalAmount: order.totalAmount,
                     status: 'Paid', // Mark as paid since order is delivered
                     paymentMethod: order.paymentMethod || 'COD',
-                    issueDate: order.deliveredAt || order.updatedAt || new Date(),
-                    dueDate: order.deliveredAt || order.updatedAt || new Date(),
+                    issueDate: issueDate,
+                    dueDate: issueDate,
                     paidAt: order.paidAt || order.deliveredAt || new Date(),
                     notes: `Hóa đơn tự động đồng bộ cho đơn hàng ${order.orderCode} (Đã giao hàng)`,
                 };

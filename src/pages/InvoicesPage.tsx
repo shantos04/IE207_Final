@@ -86,22 +86,38 @@ export default function InvoicesPage() {
         try {
             setRefreshing(true);
 
-            // HARD RESET: Clear all filters and pagination
+            // Step 1: Sync missing invoices for delivered orders
+            console.log('🔄 Syncing missing invoices...');
+            const syncResult = await invoiceService.syncMissingInvoices();
+            console.log('✅ Sync result:', syncResult);
+
+            // Clear all filters
             setSearchTerm('');
             setStartDate('');
             setEndDate('');
             setStatusFilter('');
             setCurrentPage(1);
 
-            // Refetch with clean state
-            const response = await invoiceService.getInvoices({ page: 1, limit });
+            // Step 2: Fetch fresh invoice list
+            const response = await invoiceService.getInvoices({
+                page: 1,
+                limit: limit
+            });
 
             if (response.success) {
                 setInvoices(response.data);
                 setTotalPages(response.pagination.pages);
-                toast.success('Đã làm mới và reset tất cả bộ lọc!');
+                console.log('✅ Loaded invoices:', response.data.length, 'items');
+
+                const createdCount = syncResult.summary?.createdCount || 0;
+                if (createdCount > 0) {
+                    toast.success(`Đã tạo ${createdCount} hóa đơn mới và làm mới danh sách!`);
+                } else {
+                    toast.success('Đã làm mới danh sách hóa đơn!');
+                }
             }
         } catch (err) {
+            console.error('❌ Error refreshing:', err);
             toast.error('Không thể làm mới dữ liệu');
         } finally {
             setRefreshing(false);

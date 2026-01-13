@@ -88,4 +88,16 @@ export const invoiceService = {
         const response = await api.put<InvoiceResponse>(`/invoices/${id}/cancel`);
         return response.data;
     },
+
+    // Đồng bộ hóa đơn thiếu cho các đơn hàng đã giao
+    syncMissingInvoices: async () => {
+        const response = await api.post<{
+            success: boolean;
+            message: string;
+            created: number;
+            skipped: number;
+            errors: number;
+        }>('/invoices/sync-missing');
+        return response.data;
+    },
 };
