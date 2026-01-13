@@ -74,8 +74,9 @@ export const getTopProducts = async (req, res) => {
         const { limit = 5, startDate, endDate } = req.query;
 
         // Build match query
+        // FIXED: Count ALL non-cancelled orders to reflect real-time inventory demand
         const matchQuery = {
-            status: { $in: ['Delivered', 'Confirmed'] }, // Only completed orders
+            status: { $ne: 'Cancelled' }, // Include Pending, Confirmed, Shipped, Delivered
         };
 
         // Add date filter if provided
@@ -101,7 +102,7 @@ export const getTopProducts = async (req, res) => {
                     _id: '$orderItems.product',
                     productName: { $first: '$orderItems.productName' },
                     productCode: { $first: '$orderItems.productCode' },
-                    totalQuantity: { $sum: '$orderItems.quantity' },
+                    totalQuantity: { $sum: '$orderItems.quantity' }, // Properly sum quantities
                     totalRevenue: { $sum: '$orderItems.subtotal' },
                     orderCount: { $sum: 1 }
                 }
@@ -354,8 +355,9 @@ export const getProductSalesPerformance = async (req, res) => {
         const { startDate, endDate, limit = 10 } = req.query;
 
         // Build match query
+        // FIXED: Count ALL non-cancelled orders to reflect real-time sales performance
         const matchQuery = {
-            status: { $in: ['Delivered', 'Confirmed'] } // Only completed orders
+            status: { $ne: 'Cancelled' } // Include Pending, Confirmed, Shipped, Delivered
         };
 
         // Add date filter if provided
@@ -380,7 +382,7 @@ export const getProductSalesPerformance = async (req, res) => {
                 $group: {
                     _id: '$orderItems.productName',
                     productCode: { $first: '$orderItems.productCode' },
-                    totalQty: { $sum: '$orderItems.quantity' },
+                    totalQty: { $sum: '$orderItems.quantity' }, // Sum quantities properly
                     totalRevenue: { $sum: '$orderItems.subtotal' },
                     orderCount: { $sum: 1 }
                 }

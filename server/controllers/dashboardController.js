@@ -263,10 +263,11 @@ export const getDashboardCharts = async (req, res) => {
         }));
 
         // ============= TOP PRODUCTS (Bonus) =============
+        // FIXED: Count ALL non-cancelled orders (including Pending, Confirmed, Shipped, Delivered)
         const topProducts = await Order.aggregate([
             {
                 $match: {
-                    status: 'Delivered',
+                    status: { $ne: 'Cancelled' }, // Exclude only cancelled orders
                 },
             },
             {
@@ -274,9 +275,25 @@ export const getDashboardCharts = async (req, res) => {
             },
             {
                 $group: {
-                    _id: '$orderItems.productName',
-                    totalQuantity: { $sum: '$orderItems.quantity' },
+                    _id: '$orderItems.product', // Group by product ID (not name) for accurate aggregation
+                    productName: { $first: '$orderItems.productName' },
+                    productCode: { $first: '$orderItems.productCode' },
+                    totalQuantity: { $sum: '$orderItems.quantity' }, // Sum the quantities
                     totalRevenue: { $sum: '$orderItems.subtotal' },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'productDetails',
+                },
+            },
+            {
+                $unwind: {
+                    path: '$productDetails',
+                    preserveNullAndEmptyArrays: true,
                 },
             },
             {
@@ -287,9 +304,11 @@ export const getDashboardCharts = async (req, res) => {
             },
             {
                 $project: {
-                    name: '$_id',
+                    name: '$productName',
+                    productCode: 1,
                     quantity: '$totalQuantity',
                     revenue: '$totalRevenue',
+                    imageUrl: '$productDetails.imageUrl',
                     _id: 0,
                 },
             },
