@@ -535,8 +535,9 @@ export default function OrdersPage() {
                                                     </button>
                                                     <button
                                                         onClick={() => openStatusModal(order)}
-                                                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                                        title="Cập nhật trạng thái"
+                                                        disabled={order.status === 'Delivered' || order.status === 'Cancelled'}
+                                                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                                        title={order.status === 'Delivered' || order.status === 'Cancelled' ? 'Không thể chỉnh sửa đơn hàng đã giao/hủy' : 'Cập nhật trạng thái'}
                                                     >
                                                         <Pencil className="w-4 h-4" />
                                                     </button>
@@ -633,9 +634,10 @@ export default function OrdersPage() {
                                     <option value="Pending">Chờ xử lý</option>
                                     <option value="Confirmed">Đã xác nhận</option>
                                     <option value="Shipped">Đang giao hàng</option>
-                                    <option value="Delivered">Đã giao thành công</option>
-                                    <option value="Cancelled">Đã hủy</option>
                                 </select>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    * Chỉ khách hàng mới có thể xác nhận "Đã giao thành công" hoặc "Đã hủy"
+                                </p>
                             </div>
 
                             {/* Note */}
