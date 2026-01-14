@@ -40,6 +40,11 @@ interface StatusUpdateModal {
     order: Order | null;
 }
 
+// Format currency with Vietnamese format
+const formatCurrencyCompact = (value: number): string => {
+    return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
+};
+
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -290,10 +295,7 @@ export default function OrdersPage() {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Doanh thu hôm nay</p>
                             <p className="text-2xl font-bold text-green-600 mt-2">
-                                {new Intl.NumberFormat('vi-VN', {
-                                    notation: 'compact',
-                                    compactDisplay: 'short'
-                                }).format(stats.todayRevenue)}₫
+                                {formatCurrencyCompact(stats.todayRevenue)}
                             </p>
                         </div>
                         <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
