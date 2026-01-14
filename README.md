@@ -189,51 +189,78 @@ IE207_Final/
 └── README.md                   # This file
 ```
 
-## 🎯 Roadmap
-
-- [x] ✅ Authentication Module (Login/SignUp/Protected Routes)
-- [ ] Trang Quản lý Sản phẩm
-- [ ] Trang Quản lý Đơn hàng
-- [ ] Trang Quản lý Khách hàng
-- [ ] Trang Hóa đơn
-- [ ] Trang Báo cáo
-- [ ] Backend API Integration
-- [ ] Role-based Access Control (RBAC)
-
-## 📚 Documentation
-
-- [Authentication Guide](docs/AUTHENTICATION.md) - Chi tiết về module xác thực
-- [Connect Frontend-Backend](docs/CONNECT_FRONTEND_BACKEND.md) - Hướng dẫn kết nối Full-stack
-- [Server API Documentation](server/README.md) - API endpoints và usage
-
-## 🔑 Environment Variables
+## 🔑 Biến môi trường
 
 ### Frontend (.env)
 ```bash
 VITE_API_URL=http://localhost:5000/api
-VITE_APP_NAME=CraftUI ERP
 ```
 
 ### Backend (server/.env)
 ```bash
+# Server
 PORT=5000
 NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/craftui_erp
-JWT_SECRET=your-super-secret-jwt-key
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/elecstrike
+
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
+
+# CORS
 CLIENT_URL=http://localhost:3000
+
+# File Upload
+MAX_FILE_SIZE=5242880
+UPLOAD_PATH=uploads
 ```
 
-## 👤 Demo Accounts
+## 👤 Tài khoản Demo
 
-Sau khi chạy `npm run seed` trong folder server:
+Sau khi chạy `npm run seed` trong thư mục server:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@craftui.com | admin123 |
-| Manager | manager@craftui.com | manager123 |
-| Staff | staff@craftui.com | staff123 |
+| Vai trò | Email | Mật khẩu | Quyền hạn |
+|---------|-------|----------|-----------|
+| Admin | admin@craftui.com | admin123 | Toàn quyền hệ thống |
+| Manager | manager@craftui.com | manager123 | Quản lý sản phẩm, đơn hàng, khách hàng |
+| Staff | staff@craftui.com | staff123 | Xem và xử lý đơn hàng |
 
-## 📝 License
+## 🚀 Deployment
 
-MIT
+### Backend (Node.js)
+Có thể deploy trên: Heroku, Railway, Render, DigitalOcean, AWS EC2
+
+### Frontend (React)
+Có thể deploy trên: Vercel, Netlify, GitHub Pages, AWS S3 + CloudFront
+
+### Database
+Sử dụng MongoDB Atlas cho production
+
+## 📱 Screenshots
+
+*(Có thể thêm screenshots của ứng dụng tại đây)*
+
+## 🤝 Đóng góp
+
+Mọi đóng góp đều được chào đón! Vui lòng:
+1. Fork dự án
+2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
+3. Commit thay đổi (`git commit -m 'Add some AmazingFeature'`)
+4. Push lên branch (`git push origin feature/AmazingFeature`)
+5. Mở Pull Request
+
+## 📄 License
+
+Dự án này được phát triển cho mục đích học tập - Môn IE207 - UIT
+
+## 👨‍💻 Tác giả
+
+**ELECSTRIKE Team**
+- Website: https://elecstrike.vercel.app
+- Email: admin@craftui.com
+
+---
+
+© 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE.
