@@ -1,48 +1,38 @@
-# CraftUI - ERP Quản lý Linh Kiện Điện Tử
+# ELECSTRIKE - Hệ thống Quản lý Cửa hàng Linh Kiện Điện Tử
 
-Ứng dụng ERP hiện đại Full-stack cho quản lý linh kiện điện tử, được xây dựng với MERN Stack.
+Ứng dụng quản lý cửa hàng linh kiện điện tử full-stack hiện đại, được xây dựng với MERN Stack.
 
 ## 🚀 Công nghệ sử dụng
 
 ### Frontend
-- **Framework:** React 19
+- **Framework:** React 19 + TypeScript
 - **Build Tool:** Vite 7
-- **Language:** TypeScript
 - **Styling:** Tailwind CSS 3.4
-- **Icons:** Lucide React
+- **UI Components:** Headless UI, Lucide React
 - **Charts:** Recharts
-- **Routing:** React Router DOM
-- **Form:** React Hook Form + Zod
-- **Notifications:** React Hot Toast
+- **Routing:** React Router DOM v6
+- **Form Management:** React Hook Form + Zod
+- **State Management:** React Context API
 - **HTTP Client:** Axios
+- **Notifications:** React Hot Toast
 
 ### Backend
-- **Runtime:** Node.js
-- **Framework:** Express.js
+- **Runtime:** Node.js + Express.js
 - **Database:** MongoDB + Mongoose
-- **Authentication:** JWT (jsonwebtoken)
-- **Security:** Helmet, CORS, Rate Limiting
+- **Authentication:** JWT (jsonwebtoken) + bcryptjs
+- **Security:** Helmet, CORS, Express Rate Limit
 - **Validation:** express-validator
+- **File Upload:** Multer
+- **Environment:** dotenv
 
-## 📦 Cài đặt
+## 📦 Cài đặt và Chạy Dự án
 
-### Frontend
+### Yêu cầu hệ thống
+- Node.js >= 18.x
+- MongoDB >= 6.x
+- npm hoặc yarn
 
-```bash
-# Cài đặt dependencies
-npm install
-
-# Chạy development server
-npm run dev
-
-# Build cho production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-### Backend
+### 1. Cài đặt Backend
 
 ```bash
 # Di chuyển vào thư mục server
@@ -51,116 +41,152 @@ cd server
 # Cài đặt dependencies
 npm install
 
-# Cấu hình .env (copy từ .env.example)
+# Cấu hình biến môi trường
+# Tạo file .env từ .env.example và cập nhật thông tin
 cp .env.example .env
 
-# Import dữ liệu mẫu (optional)
+# Import dữ liệu mẫu (bao gồm tài khoản admin và sản phẩm)
 npm run seed
+
+# Chạy server
+npm run dev
+```
+
+Server sẽ chạy tại: http://localhost:5000
+
+### 2. Cài đặt Frontend
+
+```bash
+# Quay về thư mục gốc
+cd ..
+
+# Cài đặt dependencies
+npm install
 
 # Chạy development server
 npm run dev
-
-# Chạy production server
-npm start
 ```
 
-**Default Ports:**
-- Frontend: http://localhost:3000 (hoặc 3001)
-- Backend: http://localhost:5000
-npm run preview
-```
+Frontend sẽ chạy tại: http://localhost:3000
 
-## 🎨 Tính năng
+## 🎯 Tính năng chính
 
-### Authentication (✅ Hoàn thành)
-- ✅ Login/Sign Up với validation (React Hook Form + Zod)
-- ✅ Protected Routes (chặn truy cập khi chưa đăng nhập)
-- ✅ JWT Token management
-- ✅ Toast notifications
-- ✅ Auto logout khi token hết hạn
-- ✅ Mock API cho development
+## 🎯 Tính năng chính
 
-**Thông tin demo:** Email: `admin@craftui.com` | Password: `admin123`
+### 🔐 Xác thực & Phân quyền
+- Đăng nhập / Đăng ký với validation đầy đủ
+- Phân quyền người dùng: Admin, Manager, Staff
+- Protected Routes & Route Guards
+- JWT Token với refresh mechanism
+- Auto logout khi token hết hạn
 
-### Dashboard Tổng quan
-- ✅ Thống kê doanh thu, đơn hàng, khách hàng
-- ✅ Biểu đồ doanh thu theo tháng
-- ✅ Bảng đơn hàng gần đây
-- ✅ Mini charts cho từng chỉ số
+### 🛍️ Quản lý Sản phẩm
+- CRUD sản phẩm với upload hình ảnh
+- Phân loại theo danh mục (Vi điều khiển, Cảm biến, Module truyền thông, Động cơ, v.v.)
+- Quản lý tồn kho tự động
+- Tìm kiếm và lọc sản phẩm
+- Import/Export dữ liệu sản phẩm
 
-### Layout
-- ✅ Sidebar có thể thu gọn
-- ✅ Header với tìm kiếm và thông báo
-- ✅ User profile với nút Logout
-- ✅ Responsive design
+### 📦 Quản lý Đơn hàng
+- Tạo và xử lý đơn hàng
+- Theo dõi trạng thái đơn hàng (Pending, Processing, Shipped, Delivered, Cancelled)
+- Tự động tạo hóa đơn khi đơn hàng hoàn thành
+- Cập nhật tồn kho tự động
+- Lịch sử đơn hàng chi tiết
+
+### 👥 Quản lý Khách hàng
+- Thông tin khách hàng đầy đủ
+- Lịch sử mua hàng
+- Phân loại khách hàng (VIP, Thường)
+- Tìm kiếm và lọc khách hàng
+
+### 🧾 Quản lý Hóa đơn
+- Tự động tạo hóa đơn từ đơn hàng
+- In hóa đơn PDF
+- Tìm kiếm và lọc hóa đơn
+- Đồng bộ dữ liệu hóa đơn
+
+### 📊 Dashboard & Báo cáo
+- Thống kê doanh thu theo ngày/tháng/năm
+- Biểu đồ doanh thu và đơn hàng
+- Top sản phẩm bán chạy
+- Thống kê khách hàng
+- Cảnh báo tồn kho thấp
+- Export báo cáo Excel/PDF
+
+### ⚙️ Cài đặt Hệ thống
+- Cấu hình thông tin cửa hàng
+- Cài đặt email thông báo
+- Cấu hình thanh toán
+- Quản lý thuế và phí
+- Thiết lập giao diện
+
+### 🏪 Trang Khách hàng (Shop)
+- Danh sách sản phẩm với lọc và tìm kiếm
+- Xem chi tiết sản phẩm
+- Giỏ hàng
+- Đặt hàng trực tuyến
+- Responsive design
 
 ## 🏗️ Cấu trúc dự án
 
 ```
-DoAn/
+IE207_Final/
 ├── src/                          # Frontend Source Code
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── DashboardLayout.tsx
-│   │   │   ├── Sidebar.tsx
-│   │   │   └── Header.tsx
-│   │   ├── dashboard/
-│   │   │   ├── StatCard.tsx
-│   │   │   ├── RevenueChart.tsx
-│   │   │   └── RecentOrdersTable.tsx
-│   │   └── auth/
-│   │       └── ProtectedRoute.tsx
-│   ├── contexts/
-│   │   └── AuthContext.tsx
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── authService.ts
-│   ├── pages/
-│   │   ├── DashboardHome.tsx
-│   │   └── AuthPage.tsx
-│   ├── types/
-│   │   └── index.ts
-│   ├── data/
-│   │   └── mockData.ts
-│   ├── App.tsx
-│   └── main.tsx
+│   ├── components/              # React Components
+│   │   ├── layout/              # Layout components (Sidebar, Header)
+│   │   ├── dashboard/           # Dashboard components
+│   │   ├── products/            # Product management components
+│   │   ├── orders/              # Order management components
+│   │   ├── customers/           # Customer management components
+│   │   ├── invoices/            # Invoice components
+│   │   └── settings/            # Settings components
+│   ├── contexts/                # React Context (Auth, Cart)
+│   ├── services/                # API Services
+│   ├── pages/                   # Page Components
+│   ├── layouts/                 # Layout wrappers
+│   ├── types/                   # TypeScript types
+│   └── data/                    # Static data & constants
 │
-├── server/                       # Backend Source Code
-│   ├── config/
-│   │   └── database.js           # MongoDB connection
-│   ├── models/
+├── server/                      # Backend Source Code
+│   ├── config/                  # Configuration
+│   │   ├── database.js          # MongoDB connection
+│   │   └── multer.js            # File upload config
+│   ├── models/                  # Mongoose Models
 │   │   ├── User.js
 │   │   ├── Product.js
-│   │   └── Order.js
-│   ├── controllers/
+│   │   ├── Order.js
+│   │   ├── Customer.js
+│   │   ├── Invoice.js
+│   │   └── Setting.js
+│   ├── controllers/             # Route Controllers
 │   │   ├── authController.js
 │   │   ├── productController.js
-│   │   └── orderController.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── productRoutes.js
-│   │   └── orderRoutes.js
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   └── errorHandler.js
-│   ├── scripts/
-│   │   └── seed.js
-│   ├── .env
-│   ├── package.json
-│   └── index.js
+│   │   ├── orderController.js
+│   │   ├── customerController.js
+│   │   ├── invoiceController.js
+│   │   ├── dashboardController.js
+│   │   ├── analyticsController.js
+│   │   ├── settingController.js
+│   │   └── userController.js
+│   ├── routes/                  # API Routes
+│   ├── middleware/              # Express Middleware
+│   │   ├── auth.js              # JWT Authentication
+│   │   └── errorHandler.js      # Error handling
+│   ├── scripts/                 # Utility Scripts
+│   │   └── seed.js              # Database seeding
+│   ├── seeders/                 # Data Seeders
+│   │   └── master.seed.js       # Master seeder
+│   ├── uploads/                 # Uploaded files
+│   └── index.js                 # Server entry point
 │
-├── docs/                         # Documentation
-│   ├── AUTHENTICATION.md
-│   └── CONNECT_FRONTEND_BACKEND.md
-│
-├── package.json                  # Frontend dependencies
-├── vite.config.ts
-├── tailwind.config.js
-└── README.md
-├── data/
-│   └── mockData.ts
-├── App.tsx
-└── main.tsx
+├── public/                      # Static assets
+├── docs/                        # Documentation (deleted)
+├── package.json                 # Frontend dependencies
+├── vite.config.ts              # Vite configuration
+├── tailwind.config.js          # Tailwind CSS config
+├── tsconfig.json               # TypeScript config
+└── README.md                   # This file
 ```
 
 ## 🎯 Roadmap
