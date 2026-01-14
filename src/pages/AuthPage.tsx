@@ -215,15 +215,15 @@ export default function AuthPage() {
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center mb-8">
-                        <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center">
-                            <span className="text-white text-3xl font-bold">C</span>
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden">
+                            <img src="/logo.jpg" alt="ELECSTRIKE Logo" className="w-full h-full object-cover" />
                         </div>
                     </div>
 
                     {/* Title */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                            Chào mừng đến với CRM.
+                            Chào mừng đến với ELECSTRIKE.
                         </h1>
                         <p className="text-gray-500">
                             {isSignUp ? 'Đăng ký để bắt đầu.' : 'Đăng nhập để tiếp tục.'}
@@ -522,17 +522,13 @@ export default function AuthPage() {
                 </div>
             </div>
 
-            {/* Right Side - Illustration */}
-            <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-primary-500 to-primary-700 relative overflow-hidden">
+            {/* Right Side - Galaxy Background */}
+            <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 relative overflow-hidden">
                 <div className="absolute inset-0 flex items-center justify-center p-12">
                     <div className="text-center text-white">
                         <div className="mb-8">
-                            <div className="w-64 h-64 mx-auto bg-white/10 rounded-full backdrop-blur-sm flex items-center justify-center">
-                                <div className="w-48 h-48 bg-white/20 rounded-full flex items-center justify-center">
-                                    <div className="w-32 h-32 bg-white/30 rounded-full flex items-center justify-center">
-                                        <UserIcon className="w-16 h-16 text-white" />
-                                    </div>
-                                </div>
+                            <div className="w-64 h-64 mx-auto rounded-full overflow-hidden bg-white flex items-center justify-center">
+                                <img src="/logo.jpg" alt="ELECSTRIKE Logo" className="w-full h-full object-cover" />
                             </div>
                         </div>
                         <h2 className="text-4xl font-bold mb-4">
@@ -547,6 +543,12 @@ export default function AuthPage() {
                 {/* Decorative circles */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full"></div>
                 <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-white/10 rounded-full"></div>
+
+                {/* Stars effect */}
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-2/3 right-1/4 w-1 h-1 bg-white rounded-full animate-pulse" style={{ animationDelay: '1.5s' }}></div>
             </div>
         </div>
     );
