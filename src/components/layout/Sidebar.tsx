@@ -49,11 +49,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         >
             {/* Logo Section */}
             <div className="h-16 flex items-center justify-center border-b border-gray-200 relative">
-                <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center">
-                    <span className="text-white text-2xl font-bold">C</span>
+                <div className="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center">
+                    <img src="/logo.jpg" alt="ELECSTRIKE Logo" className="w-full h-full object-cover" />
                 </div>
                 {!isCollapsed && (
-                    <span className="ml-3 text-xl font-semibold text-gray-800">CraftUI</span>
+                    <span className="ml-3 text-xl font-semibold text-gray-800">ELECSTRIKE</span>
                 )}
 
                 {/* Toggle Button */}
@@ -73,7 +73,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             {!isCollapsed && (
                 <div className="p-4 border-b border-gray-200">
                     <p className="text-sm text-gray-500">Chào mừng,</p>
-                    <p className="text-base font-semibold text-gray-800">CRAFTUI</p>
+                    <p className="text-base font-semibold text-gray-800">ELECSTRIKE</p>
                 </div>
             )}
 
