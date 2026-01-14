@@ -28,6 +28,7 @@ const productSchema = new mongoose.Schema(
                 'linh-kien-dien-tu',
                 'module-nguon',
                 'bo-mach',
+                'dong-co',
             ],
         },
         price: {

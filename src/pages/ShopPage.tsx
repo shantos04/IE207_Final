@@ -39,6 +39,7 @@ export default function ShopPage() {
         { id: 'linh-kien-dien-tu', name: 'Linh kiện điện tử' },
         { id: 'module-nguon', name: 'Module nguồn' },
         { id: 'bo-mach', name: 'Bo mạch phát triển' },
+        { id: 'dong-co', name: 'Động cơ' },
     ];
 
     // Main effect: Fetch products based on URL params (keyword or normal)

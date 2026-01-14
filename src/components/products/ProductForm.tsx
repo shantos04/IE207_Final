@@ -29,6 +29,7 @@ const categoryOptions = [
     { value: 'linh-kien-dien-tu', label: 'Linh kiện điện tử' },
     { value: 'module-nguon', label: 'Module nguồn' },
     { value: 'bo-mach', label: 'Bo mạch phát triển' },
+    { value: 'dong-co', label: 'Động cơ' },
 ];
 
 export default function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {
