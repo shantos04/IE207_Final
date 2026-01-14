@@ -431,7 +431,7 @@ export default function ClientLayout() {
                     {/* Copyright Section */}
                     <div className="border-t border-gray-800 pt-6">
                         <p className="text-center text-sm text-gray-400">
-                            &copy; 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE. Thiết kế bởi Team IE207.
+                            &copy; 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE.
                         </p>
                     </div>
                 </div>
