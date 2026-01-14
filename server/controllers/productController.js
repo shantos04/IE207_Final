@@ -133,14 +133,7 @@ export const createProduct = async (req, res) => {
 // @access  Private (Admin/Manager)
 export const updateProduct = async (req, res) => {
     try {
-        const product = await Product.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true,
-            }
-        );
+        const product = await Product.findById(req.params.id);
 
         if (!product) {
             return res.status(404).json({
@@ -148,6 +141,14 @@ export const updateProduct = async (req, res) => {
                 message: 'Không tìm thấy sản phẩm',
             });
         }
+
+        // Update fields
+        Object.keys(req.body).forEach(key => {
+            product[key] = req.body[key];
+        });
+
+        // Save to trigger middleware (auto-update status based on stock)
+        await product.save();
 
         res.status(200).json({
             success: true,

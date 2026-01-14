@@ -527,13 +527,6 @@ export default function OrdersPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => window.location.href = `/admin/orders/${order._id}`}
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                        title="Xem chi tiết"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button
                                                         onClick={() => openStatusModal(order)}
                                                         disabled={order.status === 'Delivered' || order.status === 'Cancelled'}
                                                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"

@@ -9,6 +9,7 @@ import AccountLayout from './pages/client/account/AccountLayout'
 import DashboardHome from './pages/DashboardHome'
 import ProductsPage from './pages/ProductsPage'
 import OrdersPage from './pages/OrdersPage'
+import OrderDetailPage from './pages/OrderDetailPage'
 import CustomersPage from './pages/CustomersPage'
 import InvoicesPage from './pages/InvoicesPage'
 import InvoiceDetailPage from './pages/InvoiceDetailPage'
@@ -96,6 +97,7 @@ function App() {
                             <Route path="dashboard" element={<DashboardHome />} />
                             <Route path="products" element={<ProductsPage />} />
                             <Route path="orders" element={<OrdersPage />} />
+                            <Route path="orders/:id" element={<OrderDetailPage />} />
                             <Route path="customers" element={<CustomersPage />} />
                             <Route path="invoices" element={<InvoicesPage />} />
                             <Route path="invoices/:id" element={<InvoiceDetailPage />} />
