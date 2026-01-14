@@ -24,10 +24,10 @@ const productSchema = new mongoose.Schema(
             enum: [
                 'vi-dieu-khien',
                 'cam-bien',
-                'dong-co',
                 'module-truyen-thong',
                 'linh-kien-dien-tu',
-                'khac',
+                'module-nguon',
+                'bo-mach',
             ],
         },
         price: {

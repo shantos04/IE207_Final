@@ -25,10 +25,10 @@ interface ProductFormProps {
 const categoryOptions = [
     { value: 'vi-dieu-khien', label: 'Vi điều khiển' },
     { value: 'cam-bien', label: 'Cảm biến' },
-    { value: 'dong-co', label: 'Động cơ' },
     { value: 'module-truyen-thong', label: 'Module truyền thông' },
     { value: 'linh-kien-dien-tu', label: 'Linh kiện điện tử' },
-    { value: 'khac', label: 'Khác' },
+    { value: 'module-nguon', label: 'Module nguồn' },
+    { value: 'bo-mach', label: 'Bo mạch phát triển' },
 ];
 
 export default function ProductForm({ product, onSubmit, onCancel }: ProductFormProps) {

@@ -707,14 +707,18 @@ export const getOrderStats = async (req, res) => {
             }, 0);
         };
 
-        // 3. Count today's orders and calculate today's revenue
+        // 3. Count today's orders and calculate today's revenue (excluding cancelled orders)
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
         const todayStats = await Order.aggregate([
             {
                 $match: {
-                    createdAt: { $gte: startOfDay }
+                    createdAt: { $gte: startOfDay },
+                    // Exclude cancelled orders from revenue calculation
+                    status: {
+                        $nin: ['Cancelled', 'cancelled', 'Đã hủy', 'canceled']
+                    }
                 }
             },
             {
