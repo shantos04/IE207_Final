@@ -436,9 +436,9 @@ export const getRevenueByOrder = async (req, res) => {
     try {
         const { startDate, endDate, limit = 20 } = req.query;
 
-        // Build match query - only completed orders
+        // Build match query - only delivered (completed) orders
         const matchQuery = {
-            status: { $in: ['Delivered', 'Confirmed'] }
+            status: 'Delivered' // Only count successfully delivered orders
         };
 
         // Add date filter if provided
