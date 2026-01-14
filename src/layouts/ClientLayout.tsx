@@ -90,10 +90,10 @@ export default function ClientLayout() {
                     <div className="flex items-center justify-between py-4">
                         {/* Logo */}
                         <Link to="/" className="flex items-center space-x-2">
-                            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                                <Package className="w-6 h-6 text-white" />
+                            <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
+                                <img src="/logo.jpg" alt="ELECSTRIKE" className="w-full h-full object-cover" />
                             </div>
-                            <span className="text-2xl font-bold text-gray-900">ShopHub</span>
+                            <span className="text-2xl font-bold text-gray-900">ELECSTRIKE</span>
                         </Link>
 
                         {/* Search Bar - Desktop */}
@@ -330,10 +330,10 @@ export default function ClientLayout() {
                         {/* Column 1: Logo & Description */}
                         <div>
                             <div className="flex items-center gap-2 mb-4">
-                                <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center">
-                                    <Package className="w-6 h-6 text-white" />
+                                <div className="w-10 h-10 rounded overflow-hidden flex items-center justify-center">
+                                    <img src="/logo.jpg" alt="ELECSTRIKE" className="w-full h-full object-cover" />
                                 </div>
-                                <span className="text-white text-xl font-bold">ShopHub</span>
+                                <span className="text-white text-xl font-bold">ELECSTRIKE</span>
                             </div>
                             <p className="text-gray-400 text-sm leading-relaxed">
                                 Nền tảng mua sắm trực tuyến hàng đầu, cung cấp linh kiện điện tử chất lượng cao với giá tốt nhất.
@@ -389,7 +389,7 @@ export default function ClientLayout() {
                                     </svg>
                                     <div>
                                         <div className="text-gray-400">Email</div>
-                                        <div className="text-white">support@shophub.com</div>
+                                        <div className="text-white">support@elecstrike.com</div>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2">
@@ -431,7 +431,7 @@ export default function ClientLayout() {
                     {/* Copyright Section */}
                     <div className="border-t border-gray-800 pt-6">
                         <p className="text-center text-sm text-gray-400">
-                            &copy; 2026 ShopHub. Bản quyền thuộc về ShopHub. Thiết kế bởi Team IE207.
+                            &copy; 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE. Thiết kế bởi Team IE207.
                         </p>
                     </div>
                 </div>
