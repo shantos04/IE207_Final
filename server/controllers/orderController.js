@@ -70,6 +70,12 @@ export const getOrders = async (req, res) => {
             .skip((page - 1) * limit)
             .sort({ createdAt: -1 });
 
+        // Debug: Log first order's orderItems
+        if (orders.length > 0) {
+            console.log('📦 [OrderController] First order orderItems:', orders[0].orderItems);
+            console.log('📦 [OrderController] OrderItems length:', orders[0].orderItems?.length);
+        }
+
         const count = await Order.countDocuments(query);
 
         res.status(200).json({

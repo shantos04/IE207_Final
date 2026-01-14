@@ -94,6 +94,8 @@ export default function OrdersPage() {
             const response = await orderService.getOrders(params);
 
             if (response.success) {
+                console.log('📦 Orders data:', response.data);
+                console.log('📦 First order orderItems:', response.data[0]?.orderItems);
                 setOrders(response.data);
                 setTotalPages(response.pagination.pages);
             }

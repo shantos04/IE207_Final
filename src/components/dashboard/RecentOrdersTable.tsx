@@ -55,9 +55,6 @@ export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                                 Khách hàng
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Sản phẩm
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ngày đặt
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -79,20 +76,6 @@ export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                                         <div className="text-sm font-medium text-gray-900">{order.customer.name}</div>
                                         {order.customer.email && (
                                             <div className="text-sm text-gray-500">{order.customer.email}</div>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="text-sm text-gray-900">
-                                        {order.items.length > 0 ? (
-                                            <>
-                                                {order.items[0].productName}
-                                                {order.items.length > 1 && (
-                                                    <span className="text-gray-500"> +{order.items.length - 1} khác</span>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <span className="text-gray-400">Không có sản phẩm</span>
                                         )}
                                     </div>
                                 </td>
