@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Clock, Truck, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { orderService, Order as ServiceOrder } from '../../../services/orderService';
 
@@ -103,8 +103,6 @@ export default function MyOrdersPage() {
         switch (status.toLowerCase()) {
             case 'pending':
                 return <Clock className="w-5 h-5 text-yellow-500" />;
-            case 'processing':
-                return <Package className="w-5 h-5 text-blue-500" />;
             case 'shipped':
                 return <Truck className="w-5 h-5 text-purple-500" />;
             case 'delivered':
@@ -120,8 +118,6 @@ export default function MyOrdersPage() {
         switch (status.toLowerCase()) {
             case 'pending':
                 return 'Chờ xác nhận';
-            case 'processing':
-                return 'Đang xử lý';
             case 'shipped':
                 return 'Đang giao';
             case 'delivered':
@@ -137,8 +133,6 @@ export default function MyOrdersPage() {
         switch (status.toLowerCase()) {
             case 'pending':
                 return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-            case 'processing':
-                return 'bg-blue-50 text-blue-700 border-blue-200';
             case 'shipped':
                 return 'bg-purple-50 text-purple-700 border-purple-200';
             case 'delivered':
@@ -176,7 +170,6 @@ export default function MyOrdersPage() {
                 {[
                     { value: 'all', label: 'Tất cả' },
                     { value: 'pending', label: 'Chờ xác nhận' },
-                    { value: 'processing', label: 'Đang xử lý' },
                     { value: 'shipped', label: 'Đang giao' },
                     { value: 'delivered', label: 'Đã giao' },
                     { value: 'cancelled', label: 'Đã hủy' },
@@ -348,12 +341,6 @@ export default function MyOrdersPage() {
                                                 Đã nhận được hàng
                                             </button>
                                         )}
-
-                                        {/* View Detail Button - Always visible */}
-                                        <button className="px-6 py-2.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors font-medium flex items-center justify-center gap-2">
-                                            <Eye className="w-5 h-5" />
-                                            <span>Xem chi tiết</span>
-                                        </button>
                                     </div>
                                 </div>
                             </div>
