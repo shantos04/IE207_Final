@@ -251,9 +251,6 @@ export default function CustomersPage() {
                                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Tổng chi tiêu
                                         </th>
-                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Hành động
-                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -308,23 +305,6 @@ export default function CustomersPage() {
                                                 <div className="text-sm font-semibold text-gray-900">
                                                     {formatCurrency(customer.totalSpent || 0)}
                                                 </div>
-                                            </td>
-
-                                            {/* Hành động */}
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <button
-                                                    className="text-blue-600 hover:text-blue-900 mr-4 inline-flex items-center"
-                                                    title="Chỉnh sửa"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(customer._id, customer.name)}
-                                                    className="text-red-600 hover:text-red-900 inline-flex items-center"
-                                                    title="Xóa"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
                                             </td>
                                         </tr>
                                     ))}
