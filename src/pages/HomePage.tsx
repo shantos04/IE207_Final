@@ -50,7 +50,7 @@ export default function HomePage() {
                 id: product._id,
                 name: product.name,
                 price: product.price,
-                image: product.image_url,
+                image: product.imageUrl,
             }, 1);
             toast.success(`Đã thêm ${product.name} vào giỏ hàng!`);
         } else {
@@ -164,9 +164,9 @@ export default function HomePage() {
                                 >
                                     <Link to={`/product/${product._id}`} className="block">
                                         <div className="relative h-48 bg-gray-200 overflow-hidden">
-                                            {product.image_url ? (
+                                            {product.imageUrl ? (
                                                 <img
-                                                    src={product.image_url}
+                                                    src={product.imageUrl}
                                                     alt={product.name}
                                                     className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                                                 />

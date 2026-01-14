@@ -73,7 +73,7 @@ export default function ProductDetailPage() {
                     id: product._id,
                     name: product.name,
                     price: product.price,
-                    image: product.image_url,
+                    image: product.imageUrl,
                 },
                 quantity
             );
@@ -97,8 +97,8 @@ export default function ProductDetailPage() {
     };
 
     // Mock images array (in real app, product would have multiple images)
-    const images = product?.image_url
-        ? [product.image_url]
+    const images = product?.imageUrl
+        ? [product.imageUrl]
         : [null];
 
     if (loading) {
@@ -476,9 +476,9 @@ export default function ProductDetailPage() {
                                     className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition group"
                                 >
                                     <div className="relative h-48 bg-gray-200 overflow-hidden">
-                                        {relatedProduct.image_url ? (
+                                        {relatedProduct.imageUrl ? (
                                             <img
-                                                src={relatedProduct.image_url}
+                                                src={relatedProduct.imageUrl}
                                                 alt={relatedProduct.name}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                                             />
