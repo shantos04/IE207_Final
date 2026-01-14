@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, MapPin, User, DollarSign, Package, ShoppingCart, Truck } from 'lucide-react';
+import { ArrowLeft, FileText, MapPin, User, DollarSign, Package, ShoppingCart, Truck, Receipt, Info, Mail } from 'lucide-react';
 import { invoiceService, Invoice } from '../services/invoiceService';
 
 export default function InvoiceDetailPage() {
@@ -105,7 +105,7 @@ export default function InvoiceDetailPage() {
                         </button>
                         <div>
                             <div className="flex items-center space-x-3">
-                                <FileText className="w-8 h-8 text-blue-600" />
+                                <Receipt className="w-8 h-8 text-blue-600" />
                                 <div>
                                     <h1 className="text-3xl font-bold text-gray-900">
                                         {invoice.invoiceNumber}
@@ -121,9 +121,12 @@ export default function InvoiceDetailPage() {
                             </div>
                         </div>
                     </div>
-                    <span className={`px-6 py-3 rounded-xl text-base font-semibold border-2 ${getStatusColor(invoice.status)}`}>
-                        {getStatusText(invoice.status)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-600" />
+                        <span className={`px-6 py-3 rounded-xl text-base font-semibold border-2 ${getStatusColor(invoice.status)}`}>
+                            {getStatusText(invoice.status)}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -156,7 +159,7 @@ export default function InvoiceDetailPage() {
                                 </div>
                             </div>
                             <div className="flex items-start">
-                                <DollarSign className="w-5 h-5 mr-3 text-gray-400 mt-0.5" />
+                                <Mail className="w-5 h-5 mr-3 text-gray-400 mt-0.5" />
                                 <div>
                                     <p className="text-sm text-gray-500">Email</p>
                                     <p className="font-medium text-gray-900">
@@ -217,10 +220,10 @@ export default function InvoiceDetailPage() {
                             <div>
                                 <p className="text-sm text-gray-500">Trạng thái giao hàng</p>
                                 <p className="font-medium text-gray-900 capitalize">
-                                    {invoice.order.status === 'Delivered' ? '✅ Đã giao hàng' :
-                                        invoice.order.status === 'Shipped' ? '🚚 Đang giao' :
-                                            invoice.order.status === 'Confirmed' ? '✔️ Đã xác nhận' :
-                                                invoice.order.status === 'Pending' ? '⏳ Chờ xử lý' :
+                                    {invoice.order.status === 'Delivered' ? 'Đã giao hàng' :
+                                        invoice.order.status === 'Shipped' ? 'Đang giao' :
+                                            invoice.order.status === 'Confirmed' ? 'Đã xác nhận' :
+                                                invoice.order.status === 'Pending' ? 'Chờ xử lý' :
                                                     invoice.order.status}
                                 </p>
                             </div>
@@ -343,7 +346,7 @@ export default function InvoiceDetailPage() {
             {/* Notes Section */}
             {invoice.notes && (
                 <div className="bg-white rounded-2xl shadow-sm p-6">
-                    <h2 className="text-xl font-bold mb-3 text-gray-900">📝 Ghi chú</h2>
+                    <h2 className="text-xl font-bold mb-3 text-gray-900">Ghi chú</h2>
                     <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg border border-gray-200">
                         {invoice.notes}
                     </p>
