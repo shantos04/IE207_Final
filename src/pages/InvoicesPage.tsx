@@ -478,9 +478,6 @@ export default function InvoicesPage() {
                                             Ngày xuất
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Hạn nộp
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Tổng tiền
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -513,11 +510,6 @@ export default function InvoicesPage() {
                                             {/* Ngày xuất */}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">{formatDate(invoice.issueDate)}</div>
-                                            </td>
-
-                                            {/* Hạn nộp */}
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{formatDate(invoice.dueDate)}</div>
                                             </td>
 
                                             {/* Tổng tiền */}
