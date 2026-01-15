@@ -254,13 +254,3 @@ Mọi đóng góp đều được chào đón! Vui lòng:
 ## 📄 License
 
 Dự án này được phát triển cho mục đích học tập - Môn IE207 - UIT
-
-## 👨‍💻 Tác giả
-
-**ELECSTRIKE Team**
-- Website: https://elecstrike.vercel.app
-- Email: admin@craftui.com
-
----
-
-© 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE.
