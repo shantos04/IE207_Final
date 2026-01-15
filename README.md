@@ -224,8 +224,6 @@ Sau khi chạy `npm run seed` trong thư mục server:
 | Vai trò | Email | Mật khẩu | Quyền hạn |
 |---------|-------|----------|-----------|
 | Admin | admin@craftui.com | admin123 | Toàn quyền hệ thống |
-| Manager | manager@craftui.com | manager123 | Quản lý sản phẩm, đơn hàng, khách hàng |
-| Staff | staff@craftui.com | staff123 | Xem và xử lý đơn hàng |
 
 ## 🚀 Deployment
 
