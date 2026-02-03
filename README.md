@@ -1,7 +1,5 @@
 # ELECSTRIKE - Hệ thống Quản lý Cửa hàng Linh Kiện Điện Tử
 
-Ứng dụng quản lý cửa hàng linh kiện điện tử full-stack hiện đại, được xây dựng với MERN Stack.
-
 ## 🚀 Công nghệ sử dụng
 
 ### Frontend
