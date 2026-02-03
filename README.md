@@ -1,7 +1,5 @@
 # ELECSTRIKE - Hệ thống Quản lý Cửa hàng Linh Kiện Điện Tử
 
-Ứng dụng quản lý cửa hàng linh kiện điện tử full-stack hiện đại, được xây dựng với MERN Stack.
-
 ## 🚀 Công nghệ sử dụng
 
 ### Frontend
@@ -224,8 +222,6 @@ Sau khi chạy `npm run seed` trong thư mục server:
 | Vai trò | Email | Mật khẩu | Quyền hạn |
 |---------|-------|----------|-----------|
 | Admin | admin@craftui.com | admin123 | Toàn quyền hệ thống |
-| Manager | manager@craftui.com | manager123 | Quản lý sản phẩm, đơn hàng, khách hàng |
-| Staff | staff@craftui.com | staff123 | Xem và xử lý đơn hàng |
 
 ## 🚀 Deployment
 
@@ -254,13 +250,3 @@ Mọi đóng góp đều được chào đón! Vui lòng:
 ## 📄 License
 
 Dự án này được phát triển cho mục đích học tập - Môn IE207 - UIT
-
-## 👨‍💻 Tác giả
-
-**ELECSTRIKE Team**
-- Website: https://elecstrike.vercel.app
-- Email: admin@craftui.com
-
----
-
-© 2026 ELECSTRIKE. Bản quyền thuộc về ELECSTRIKE.
