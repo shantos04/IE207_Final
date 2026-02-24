@@ -234,10 +234,6 @@ Có thể deploy trên: Vercel, Netlify, GitHub Pages, AWS S3 + CloudFront
 ### Database
 Sử dụng MongoDB Atlas cho production
 
-## 📱 Screenshots
-
-*(Có thể thêm screenshots của ứng dụng tại đây)*
-
 ## 🤝 Đóng góp
 
 Mọi đóng góp đều được chào đón! Vui lòng:
